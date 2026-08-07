@@ -12,8 +12,7 @@ documentation: [model protocol](https://andreanovoa.github.io/ntsa/protocol/)
 ## Install
 
 ```bash
-pip install dynamodels            # once released; until then:
-pip install "dynamodels @ git+https://github.com/andreanovoa/dynamodels"
+pip install dynamodels
 ```
 
 ## Quickstart
