@@ -1,5 +1,8 @@
 # dynamodels
 
+[![DOI](https://zenodo.org/badge/1326694015.svg)](https://doi.org/10.5281/zenodo.21843588)
+[![PyPI](https://img.shields.io/pypi/v/dynamodels)](https://pypi.org/project/dynamodels/)
+
 Dynamical-system models with pre-allocated history tracking and pluggable time
 integrators — the modelling core split out of
 [romda](https://github.com/andreanovoa/real-time-bias-aware-DA) so it can be
