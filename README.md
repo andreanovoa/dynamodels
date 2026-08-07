@@ -52,8 +52,8 @@ python -m pytest tests/
 ruff check dynamodels/ tests/
 ```
 
-Releases publish to PyPI via trusted publishing on version tags
-(`.github/workflows/release.yml`).
+Releases: bump `version` in `pyproject.toml`, then `git tag vX.Y.Z && git push --tags`
+(publishes to PyPI).
 
 ## License
 
