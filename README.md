@@ -6,7 +6,7 @@ integrators — the modelling core split out of
 reused on its own. Torch-free; depends only on numpy, scipy, matplotlib,
 typeguard and multiprocess.
 
-Tutorial: [`tutorial_dynamodels.ipynb`](tutorial_dynamodels.ipynb) · Interface
+Tutorial: [`tutorial_dynamodels.ipynb`](tutorial_dynamodels.ipynb) | Interface
 documentation: [model protocol](https://andreanovoa.github.io/ntsa/protocol/)
 
 ## Install
@@ -34,8 +34,9 @@ A model composes a `HistoryTracker` (state/time buffer behind `hist`, `hist_t`,
 `obs_labels` plus either `time_derivative(t, psi, **params)` (continuous) or
 `time_step(Nt)` (discrete map). `m`-member ensembles are supported natively
 (`init_ensemble`). Included physical models (`dynamodels.physical`): `Lorenz63`,
-`Lorenz96`, `VdP`, `Rijke`, `Annular`, `KS` — Lorenz63/96 and Rijke carry
-measured dominant-Lyapunov `t_lyap` tables.
+`Lorenz96`, `VdP`, `Rijke`, `Annular`, `KS` — the `lorenz63`, `lorenz96` and `rijke`
+modules carry measured dominant-Lyapunov tables (module-level `_LAM1_MEASURED`;
+`_LAM1_MEASURED_NX10` for Lorenz96) from which instances set `t_lyap`.
 
 ## Ecosystem
 

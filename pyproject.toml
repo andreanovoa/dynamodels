@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=64", "wheel"]
+requires = ["setuptools>=77", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "Dynamical-system models with history tracking and pluggable integrators (Lorenz, Van der Pol, Rijke, annular combustor, KS)"
 readme = "README.md"
 requires-python = ">=3.10"
-license = {text = "MIT"}
+license = "MIT"
 authors = [
     {name = "Andrea Nóvoa", email = "a.novoa@imperial.ac.uk"}
 ]

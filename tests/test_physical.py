@@ -45,3 +45,21 @@ def test_t_lyap_tables():
         else:
             assert np.isclose(m.t_lyap, e), f'{type(m).__name__} t_lyap = {m.t_lyap}, expected {e}'
         m.close()
+
+
+def test_pickle_drops_live_pool():
+    # pickling a mid-run model must not require close(): __getstate__ drops the
+    # (unpicklable) live pool and the copy lazily re-creates one when needed
+    import pickle
+    import threading
+
+    m = Lorenz63()
+    psi, t = m.time_integrate(Nt=5)
+    m.update_history(psi, t)
+    m.integrator._pool = threading.Lock()  # stand-in for an unpicklable live pool
+    m2 = pickle.loads(pickle.dumps(m))
+    assert m2.integrator._pool is None
+    assert np.allclose(m2.current_state, m.current_state)
+    m.integrator._pool = None
+    m.close()
+    m2.close()

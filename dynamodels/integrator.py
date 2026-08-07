@@ -327,6 +327,13 @@ class IVPIntegrator(Integrator):
             self._pool.join()
             self._pool = None
 
+    def __getstate__(self):
+        # pickling a model mid-run must not require a manual close(): drop the
+        # live pool (unpicklable); it is lazily re-created on the next forecast
+        state = self.__dict__.copy()
+        state['_pool'] = None
+        return state
+
     def __deepcopy__(self, memo):
         # Always close the pool before copying so the copy starts with no pool.
         # Re-creating a Pool inside a process that already owns one can deadlock
