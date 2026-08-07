@@ -24,6 +24,9 @@ model.visualize_history()
 model.close()                            # release the integrator's pool
 ```
 
+A full walkthrough (single-case forecast, ensembles, integrator internals) is in
+[`tutorial_dynamodels.ipynb`](tutorial_dynamodels.ipynb).
+
 ## Architecture
 
 `Model` composes two pieces:
