@@ -247,7 +247,7 @@ def save_to_mat_file(filename, data: dict, oned_as='column', do_compression=True
     sio.savemat(filename, data, oned_as=oned_as, do_compression=do_compression)
 
 
-def create_dataset_from_model(model_class, data_folder, num_lyap_times=300,
+def create_dataset(model_class, data_folder, num_lyap_times=300,
                               noise_level=0.02, seed=0, **kwargs):
     """Long noisy time series of any `Model`, cached as a .mat file in `data_folder`.
 
