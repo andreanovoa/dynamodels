@@ -63,3 +63,19 @@ def test_pickle_drops_live_pool():
     m.integrator._pool = None
     m.close()
     m2.close()
+
+
+def test_create_dataset_from_model(tmp_path):
+    from dynamodels.utils import create_dataset_from_model
+    data, path = create_dataset_from_model(Lorenz63, str(tmp_path), num_lyap_times=2, seed=1)
+    assert data['clean_data'].shape == data['noisy_data'].shape
+    assert data['clean_data'].shape[1] == 3
+    assert len(data['t']) == len(data['clean_data'])
+    assert not np.allclose(data['clean_data'], data['noisy_data'])
+    # second call must hit the .mat cache, not re-integrate
+    cached, path2 = create_dataset_from_model(Lorenz63, str(tmp_path), num_lyap_times=2, seed=1)
+    assert path2 == path
+    assert np.allclose(cached['clean_data'], data['clean_data'])
+    # Nx must key the cache: a different structural size gets its own file
+    d10, p10 = create_dataset_from_model(Lorenz96, str(tmp_path), num_lyap_times=2, Nx=10)
+    assert p10 != path and d10['clean_data'].shape[1] == 10

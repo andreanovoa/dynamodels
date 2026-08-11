@@ -314,6 +314,14 @@ class Model:
                         suffix += f'_{key}{val}'
             if len(suffix) == 0:
                 suffix = '_default'
+            # Structural parameters (`fixed_params`, e.g. Lorenz96's Nx) are keyed in
+            # too, so e.g. the Nx=10 and Nx=40 systems never share a file. Only those
+            # with a scalar class default participate: the instance-computed ones
+            # (Rijke's collocation arrays, tau_adv) would rename every file.
+            for key in self.fixed_params:
+                default, val = getattr(type(self), key, None), getattr(self, key)
+                if np.isscalar(default) and np.isscalar(val) and val != default:
+                    suffix += f'_{key}{val}'
             self._filename = f"{self.name}{suffix}"
 
         return self._filename

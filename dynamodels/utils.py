@@ -1,9 +1,11 @@
 """Shared helpers vendored from romda.utils (pure numpy/scipy, no romda dependency)."""
 
 import inspect
+import os
 from collections.abc import Sequence
 
 import numpy as np
+import scipy.io as sio
 from numpy.typing import NDArray
 from scipy.interpolate import interp1d
 
@@ -232,3 +234,69 @@ def interpolate(t_y, y, t_eval, fill_values: tuple[float, float] | str | None = 
                             fill_value=fill_values # type: ignore
                             )
     return interpolator(t_eval)
+
+
+def load_from_mat_file(filename, squeeze_me=True):
+    """Load a ``.mat`` file as a dict (thin wrapper around `scipy.io.loadmat`)."""
+    return sio.loadmat(filename, appendmat=True, squeeze_me=squeeze_me)
+
+
+def save_to_mat_file(filename, data: dict, oned_as='column', do_compression=True):
+    """Save `data` to a ``.mat`` file, creating parent directories (wraps `scipy.io.savemat`)."""
+    os.makedirs(os.path.dirname(filename) or '.', exist_ok=True)
+    sio.savemat(filename, data, oned_as=oned_as, do_compression=do_compression)
+
+
+def create_dataset_from_model(model_class, data_folder, num_lyap_times=300,
+                              noise_level=0.02, seed=0, **kwargs):
+    """Long noisy time series of any `Model`, cached as a .mat file in `data_folder`.
+
+    Integrates a fresh ``model_class(**kwargs)`` for `num_lyap_times` Lyapunov times
+    and adds Gaussian noise of `noise_level` times each component's standard
+    deviation (seeded by `seed`). The *full* state is returned — a data-driven model
+    trains on all the state variables; select its inputs downstream.
+
+    The cache file is keyed by `Model.filename` (which encodes the non-default
+    parameters, ``fixed_params`` such as Lorenz96's ``Nx`` included) plus the record
+    length, noise level and seed.
+
+    Returns
+    -------
+    tuple
+        ``(dict(clean_data, noisy_data, t, N_lyap), filename)`` — arrays of shape
+        ``(Nt, Nphi)``, the time vector, the steps per Lyapunov time, and the full
+        path of the .mat cache.
+    """
+    model = model_class(**kwargs)
+    N_lyap = int(model.t_lyap / model.dt)
+    filename = os.path.join(
+        data_folder, f'{model.filename}_Nlyap{num_lyap_times}_noise{noise_level}_seed{seed}')
+
+    try:
+        dataset = load_from_mat_file(filename)
+    except FileNotFoundError:
+        pass
+    else:
+        # A cache with the wrong state dimension must fail loudly, not silently
+        # train a network on the wrong system: e.g. a file written before
+        # `Model.filename` encoded structural parameters such as Lorenz96's `Nx`.
+        n_cached = np.shape(dataset['clean_data'])[1]
+        if n_cached != model.Nphi:
+            raise RuntimeError(
+                f"Cached dataset '{filename}' has state dimension {n_cached}, but "
+                f'{model_class.__name__}(**kwargs) has Nphi={model.Nphi}. The cache key '
+                f"(Model.filename = '{model.filename}') is not disambiguating the "
+                'structural parameters — most likely a cache written by an older '
+                'dynamodels without the fixed_params filename suffix. Delete the '
+                'stale file and rerun.')
+        return dataset, filename
+
+    model.create_long_timeseries(Nt=num_lyap_times * N_lyap)
+    clean = model.hist[:, :model.Nphi, 0].copy()
+
+    rng = np.random.default_rng(seed)
+    noisy = clean + rng.normal(scale=noise_level * clean.std(axis=0), size=clean.shape)
+
+    dataset = dict(clean_data=clean, noisy_data=noisy, t=model.hist_t, N_lyap=N_lyap)
+    save_to_mat_file(filename, dataset)
+    return dataset, filename
