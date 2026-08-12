@@ -80,3 +80,17 @@ def test_create_dataset(tmp_path):
     # Nx must key the cache: a different structural size gets its own file
     d10, p10 = create_dataset(Lorenz96, str(tmp_path), num_lyap_times=2, Nx=10)
     assert p10 != path and d10['clean_data'].shape[1] == 10
+
+
+def test_ks_dt_honored_and_param_roundtrip():
+    # dt used to be silently replaced by the 0.25 default at the Model level
+    m = KS(Nx=64, dt=0.1, nu=0.08)
+    assert m.dt == 0.1
+    _, t = m.time_integrate(Nt=5)
+    assert np.isclose(t[1] - t[0], 0.1)
+    # (Nx, nu, L) are fixed_params so a respawn-style rebuild is bit-faithful,
+    # including the L-given branch that normalizes nu to 1
+    m2 = KS(Nx=64, dt=0.1, nu=m.nu, L=m.L, psi0=m.psi0.copy())
+    pa, _ = m.time_step(Nt=50)
+    pb, _ = m2.time_step(Nt=50)
+    assert np.allclose(pa, pb)

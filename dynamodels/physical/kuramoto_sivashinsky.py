@@ -47,6 +47,8 @@ class KS(Model):
 
     initial_amplitude = 0.01
 
+    # structural constructor params: carried by ntsa.respawn and encoded in filename
+    fixed_params = ['Nx', 'nu', 'L']
     extra_print_params = ['Nx']
     sensor_placement_method = 'grid'
 
@@ -112,7 +114,6 @@ class KS(Model):
 
 
         #   Init Model  #
-        dt = model_dict.pop('dt', 0.25)
         psi0 = model_dict.pop('psi0', None)
         if psi0 is None:
             # Initialize state in physical space and transform to spectral space
@@ -122,7 +123,7 @@ class KS(Model):
             psi0 = np.array(u_hat)
 
 
-        super().__init__(psi0=psi0, dt=dt, integrator_class=DiscreteIntegrator, **model_dict)
+        super().__init__(psi0=psi0, dt=self.dt, integrator_class=DiscreteIntegrator, **model_dict)
 
 
     # _______________ Modified Model methods ________________ #
