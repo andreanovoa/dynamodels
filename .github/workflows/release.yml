@@ -1,3 +1,6 @@
+# Releasing: bump version in pyproject.toml AND dynamodels/__init__.py, commit,
+# then tag that commit: git tag vX.Y.Z && git push --tags. This workflow
+# builds the tagged tree and publishes it to PyPI (trusted publishing).
 name: release
 
 on:
