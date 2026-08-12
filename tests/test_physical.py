@@ -4,7 +4,7 @@ import sys
 import numpy as np
 
 import dynamodels
-from dynamodels.physical import KS, Annular, Lorenz63, Lorenz96, Rijke, VdP
+from dynamodels.physical import KS, KS2D, Annular, Lorenz63, Lorenz96, Rijke, VdP
 
 
 def test_torch_free_import():
@@ -17,7 +17,8 @@ def test_torch_free_import():
 
 def test_models_integrate_smoke():
     for cls, kwargs in [(Lorenz63, {}), (Lorenz96, dict(Nx=10)), (VdP, {}),
-                        (Rijke, {}), (Annular, {}), (KS, {})]:
+                        (Rijke, {}), (Annular, {}), (KS, {}),
+                        (KS2D, dict(Nx=32, Ny=32, nu1=0.5, nu2=0.35, dt=0.1))]:
         model = cls(**kwargs)
         psi, t = model.time_integrate(Nt=10)
         assert psi.shape[0] == len(t) and np.all(np.isfinite(psi)), f'{cls.__name__} integration failed'
