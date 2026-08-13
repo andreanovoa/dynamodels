@@ -2,6 +2,7 @@
 import sys
 
 import numpy as np
+import pytest
 
 import dynamodels
 from dynamodels.physical import KS, KS2D, Annular, Lorenz63, Lorenz96, Rijke, VdP
@@ -134,9 +135,65 @@ def test_ks_dt_honored_and_param_roundtrip():
     assert m.dt == 0.1
     _, t = m.time_integrate(Nt=5)
     assert np.isclose(t[1] - t[0], 0.1)
-    # (Nx, nu, L) are fixed_params so a respawn-style rebuild is bit-faithful,
-    # including the L-given branch that normalizes nu to 1
+    # nu alone nondimensionalizes: the domain absorbs nu and the stored operator
+    # is the nu = 1 one, so (Nx, nu, L) keeps describing what was integrated.
+    assert m.nu == 1.0 and m.L == pytest.approx(2 * np.pi / np.sqrt(0.08))
+    # (Nx, nu, L) are fixed_params so a respawn-style rebuild is bit-faithful
     m2 = KS(Nx=64, dt=0.1, nu=m.nu, L=m.L, psi0=m.psi0.copy())
     pa, _ = m.time_step(Nt=50)
     pb, _ = m2.time_step(Nt=50)
     assert np.allclose(pa, pb)
+
+
+def test_ks_two_parameter_form_honors_both_nu_and_L():
+    # Regression: nu used to be silently forced to 1 whenever L was given, so an
+    # independent (visc, Lx) pair was inexpressible. Both must now survive, and the
+    # linear operator must be the general alpha^2 - nu alpha^4.
+    Nx, Lx, visc, dt = 64, 20 * np.pi, 0.37, 0.01
+    m = KS(Nx=Nx, dt=dt, L=Lx, nu=visc)
+    assert m.nu == visc and m.L == Lx
+
+    alpha = 2 * np.pi * np.arange(Nx // 2 + 1) / Lx
+    np.testing.assert_allclose(m.k, alpha, rtol=0, atol=1e-12)
+    # E = exp(dt * Lhat) is the exact exponential of the linear operator, so it
+    # exposes the operator the ETDRK4 coefficients were rebuilt from.
+    expected = np.exp(dt * (alpha**2 - visc * alpha**4))[:, None]
+    np.testing.assert_allclose(m.ETDRK4_f_terms['E'], expected, rtol=1e-14, atol=0)
+
+    # The single-parameter defaults keep their nu = 1 operator
+    m_L = KS(Nx=Nx, dt=dt, L=Lx)
+    assert m_L.nu == 1.0
+    np.testing.assert_allclose(m_L.ETDRK4_f_terms['E'],
+                               np.exp(dt * (alpha**2 - alpha**4))[:, None], rtol=1e-14, atol=0)
+
+
+def test_ks_two_parameter_form_matches_rescaled_construction():
+    # (visc, Lx) and the old nu = 1 rescaling describe the SAME physical system:
+    #   v(x', t') = sqrt(visc) u(x, t),  x = sqrt(visc) x',  t = visc t'
+    # so KS(Nx, L=Lx, nu=visc, dt=dt) and KS(Nx, L=Lx/sqrt(visc), dt=dt/visc) must
+    # agree after u = v / sqrt(visc) (and t = visc t').
+    # The qlROM ks1d quasi-periodic parameters. dt is finer than the case's own 0.1
+    # on purpose: the two constructions differ only by floating-point roundoff, and
+    # this system amplifies a 1e-15 perturbation to O(1) within t ~ 30 (verified with
+    # a perturbed IC on a SINGLE construction), so the comparison horizon has to stay
+    # inside the roundoff-dominated regime for the equivalence itself to be visible.
+    Nx, Lx, visc, dt, Nt = 128, 2 * np.pi, 16 / 71, 0.02, 300
+    s = np.sqrt(visc)
+    u0 = np.cos(Lx * np.arange(Nx) / Nx)
+
+    direct = KS(Nx=Nx, dt=dt, L=Lx, nu=visc, psi0=np.fft.rfft(u0)[:, None])
+    rescaled = KS(Nx=Nx, dt=dt / visc, L=Lx / s, psi0=np.fft.rfft(s * u0)[:, None])
+
+    assert direct.dt == dt and rescaled.dt == dt / visc
+
+    pa, ta = direct.time_step(Nt=Nt)
+    pb, tb = rescaled.time_step(Nt=Nt)
+
+    ua = KS.fourier_to_physical(pa)[:, :, 0]
+    ub = KS.fourier_to_physical(pb)[:, :, 0] / s
+    err = np.max(np.abs(ua - ub)) / np.max(np.abs(ua))
+    assert err < 1e-10, f'rescaling equivalence broken: rel err {err:.2e}'
+    # time also maps: t = visc * t' (the stamps themselves are rounded to
+    # precision_t by Model, so compare the exact steps they are built from)
+    assert visc * rescaled.dt == pytest.approx(direct.dt, rel=1e-14)
+    assert len(ta) == len(tb) == Nt + 1

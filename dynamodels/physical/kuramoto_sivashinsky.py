@@ -20,9 +20,8 @@ class KS(Model):
     u_t + u_{xx} + \nu\, u_{xxxx} + u\,u_x = 0, \qquad x \in (0, L],
     $$
 
-    with periodic boundary conditions $u(t, 0) = u(t, L)$, $u_x(t, 0) = u_x(t, L)$,
-    and $\nu = (2\pi/L)^2$. Solved with the ETDRK4 scheme in Fourier space, where the
-    Fourier transform pair is
+    with periodic boundary conditions $u(t, 0) = u(t, L)$, $u_x(t, 0) = u_x(t, L)$.
+    Solved with the ETDRK4 scheme in Fourier space, where the Fourier transform pair is
 
     $$
     \hat{u}(k) = \mathcal{F}[u(x)] = \frac{1}{L}\int_0^L u(x)\,e^{-ikx}\,\mathrm{d}x,
@@ -30,8 +29,27 @@ class KS(Model):
     u(x) = \mathcal{F}^{-1}[\hat{u}(k)] = \sum_k \hat{u}(k)\,e^{ikx}.
     $$
 
-    The nonlinear term $u\,u_x$ is computed in physical space and transformed back to
-    Fourier space at every stage.
+    On the $N_x$-point grid the wavenumbers are $\alpha_j = 2\pi j / L$, so the
+    (diagonal) linear operator is $\alpha_j^2 - \nu\,\alpha_j^4$ and the nonlinear
+    term $u\,u_x$ is computed in physical space and transformed back to Fourier
+    space at every stage.
+
+    **Parametrization ($\nu$, $L$).** The pair is independent: whichever of the two
+    is given fixes that side of the operator.
+
+    - `nu` only (the default): the domain follows the standard nondimensionalization
+      $L = 2\pi/\sqrt{\nu}$, and the equation is then integrated in its $\nu = 1$
+      form on that domain -- so `self.nu` is **1** afterwards and the stored
+      $(N_x, \nu, L)$ always describes the operator that was actually integrated
+      (this is what makes `ntsa.respawn`, which rebuilds from `fixed_params`,
+      bit-faithful).
+    - `L` only: $\nu = 1$ on the given domain.
+    - **both**: both are honoured as given, i.e. the genuine two-parameter system
+      $u_t + u_{xx} + \nu u_{xxxx} + u u_x = 0$ on $(0, L]$.
+
+    The one- and two-parameter forms are related by $v(x', t') = \sqrt{\nu}\,u(x, t)$
+    with $x = \sqrt{\nu}\,x'$ and $t = \nu\,t'$: `KS(Nx, L=Lx, nu=visc, dt=dt)` and
+    `KS(Nx, L=Lx/sqrt(visc), dt=dt/visc)` describe the same physical system.
     """
 
     # name: str = 'KS'
@@ -42,6 +60,7 @@ class KS(Model):
     Nx = 256             # Spatial discretization
     nu = 0.08            # 'Viscosity' parameter of the KS equation.
     L = -1         # Domain length (0, L] NB. Will be set to 2*pi/sqrt(nu) if not specified.
+    # (nu, L) resolution rules: see the class docstring. Passing BOTH keeps both.
 
     initial_amplitude = 0.01
 
@@ -63,6 +82,9 @@ class KS(Model):
 
             - ``Nx`` : int, number of spatial grid points (must be even).
             - ``nu`` : float, viscosity parameter.
+            - ``L`` : float, domain length, domain is (0, L].
+              ``nu`` and ``L`` are independent -- see the class docstring for the
+              resolution rules when only one of them is given.
             - ``dt`` : float, time step size.
             - ``initial_amplitude`` : float, amplitude of the initial condition.
             - ``Nq`` : int, number of sensors.
@@ -72,6 +94,10 @@ class KS(Model):
         """
 
 
+        # 'nu' has a non-sentinel class default, so an EXPLICIT nu is what marks the
+        # two-parameter form; 'L' uses its non-positive class default as the sentinel.
+        nu_given = model_dict.get('nu') is not None
+
         for key in list(model_dict.keys()):
             if key in vars(KS):
                 setattr(self, key, model_dict.pop(key))
@@ -80,17 +106,24 @@ class KS(Model):
         if self.Nx % 2 != 0:
             raise ValueError("Nx must be even.")
 
-        if self.L is None or self.L <= 0 and self.nu is None:
+        L_given = self.L is not None and self.L > 0
+
+        if not L_given and not nu_given and self.nu is None:
             raise ValueError("Either L or nu must be specified.")
-        elif self.L is None or self.L <= 0:
+        elif not L_given:
+            # nu alone: standard nondimensionalization. The domain absorbs nu and the
+            # equation is integrated in its nu = 1 form, so (Nx, nu, L) stays a faithful
+            # description of the operator (respawn / filename keying).
             self.L = 2 * np.pi / np.sqrt(self.nu)
-        else:
             self.nu = 1.
+        elif not nu_given:
+            self.nu = 1.
+        # else: both given -- honour both (general two-parameter form).
 
         assert self.L is not None and self.L > 0, "L must be positive."
         assert self.nu is not None and self.nu > 0, "nu must be positive."
 
-        # Define Fourier wavenumbers k on the nondimensional domain
+        # Fourier wavenumbers alpha_j = 2 pi j / L on the domain (0, L]
         self.k = 2 * np.pi * np.fft.rfftfreq(self.Nx, d=self.L / self.Nx)
 
         dt_requested = model_dict.pop('dt', 0.25)
@@ -238,10 +271,10 @@ class KS(Model):
 
     @property
     def __linear_operator(self):
-        # ÷ Fourier multipliers for linear term
-        # return (self.k**2 - self.nu * self.k**4)[:, None]
-        # else:
-        return (self.k**2 - self.k**4)[:, None]
+        # Fourier multipliers of the linear term: alpha^2 - nu alpha^4, with
+        # alpha = self.k = 2 pi j / L. The single-parameter forms resolve nu to 1
+        # in __init__, so this reduces to alpha^2 - alpha^4 for them.
+        return (self.k**2 - self.nu * self.k**4)[:, None]
 
 
     @property
