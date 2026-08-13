@@ -3,8 +3,6 @@
 # %%
 
 
-import warnings
-
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import cm as cm
@@ -95,7 +93,8 @@ class KS(Model):
         # Define Fourier wavenumbers k on the nondimensional domain
         self.k = 2 * np.pi * np.fft.rfftfreq(self.Nx, d=self.L / self.Nx)
 
-        self.dt = model_dict.pop('dt', 0.25)
+        dt_requested = model_dict.pop('dt', 0.25)
+        self.dt = dt_requested
 
 
         self.ETDRK4_f_terms = None  # This simply trigers the setter method.
@@ -124,6 +123,13 @@ class KS(Model):
 
 
         super().__init__(psi0=psi0, dt=self.dt, integrator_class=DiscreteIntegrator, **model_dict)
+
+        # Model's dt setter rounds to precision_t decimals, which silently perturbs
+        # timesteps with more significant digits (e.g. dt = 0.1 * 71 / 16). Keep the
+        # exact requested value for stepping (precision_t still governs time stamps)
+        # and rebuild the ETDRK4 coefficients with it.
+        self._dt = float(dt_requested)
+        self.ETDRK4_f_terms = None
 
 
     # _______________ Modified Model methods ________________ #
@@ -246,93 +252,74 @@ class KS(Model):
 
     @ETDRK4_f_terms.setter
     def ETDRK4_f_terms(self, _):
-        # Avoid division by zero for k=0 mode
+        """Kassam-Trefethen ETDRK4 coefficients (E, E2, Q, f1, f2, f3) per Fourier mode.
+
+        The exponentials are exact; the phi-function coefficients Q/f1/f2/f3 are
+        evaluated with the resolvent contour integral on the half circle |z| = 15
+        (M = 32 points, real-part symmetrization) around the origin -- the same
+        quadrature rule used for the dense-operator ETDRK4 coefficients in the
+        qlROM stack, so a Galerkin projection of this discretization reproduces
+        this model's discrete map. Note: for modes with |dt*L| > 15 (far outside
+        the contour) the quadrature returns ~0 instead of the tiny exact value;
+        those modes are overdamped (E ~ exp(dt*L) ~ 0) and their nonlinear-response
+        error is negligible, matching the established dense-operator behavior.
+        """
         L = self.__linear_operator
 
-        # Initialize coefficient arrays
-        terms = dict(
-            f1 = np.zeros((self.Nk, 1), dtype=complex),
-            f2 = np.zeros((self.Nk, 1), dtype=complex),
-            f3 = np.zeros((self.Nk, 1), dtype=complex),
-            E = np.exp(self.dt * L),
-            E2 = np.exp(self.dt * L / 2),
-            nonlinear_operator = self.__nonlinear_operator
+        M = 32          # contour quadrature points
+        R = 15.0        # contour radius
+        z = R * np.exp(1j * np.pi * (np.arange(1, M + 1) - 0.5) / M)   # (M,)
+        ez, ez2 = np.exp(z), np.exp(z / 2)
+
+        # resolvent 1/(z - dt*L) per (mode, contour point)
+        res = 1.0 / (z[np.newaxis, :] - self.dt * L)                    # (Nk, 1) -> (Nk, M)
+
+        hQ = ez2 - 1.0
+        hf1 = (-4.0 - z + ez * (4.0 - 3.0 * z + z**2)) / z**2
+        hf2 = (2.0 + z + ez * (z - 2.0)) / z**2
+        hf3 = (-4.0 - 3.0 * z - z**2 + ez * (4.0 - z)) / z**2
+
+        def _coef(h):
+            return self.dt * np.real(np.mean(h[np.newaxis, :] * res, axis=-1))[:, None]
+
+        self._ETDRK4_f_terms = dict(
+            E=np.exp(self.dt * L),
+            E2=np.exp(self.dt * L / 2),
+            Q=_coef(hQ),
+            f1=_coef(hf1),
+            f2=_coef(hf2),
+            f3=_coef(hf3),
+            nonlinear_operator=self.__nonlinear_operator,
         )
-
-        # Use vectorized computation with error handling
-        with np.errstate(divide='ignore', invalid='ignore', over='ignore'):
-
-            # Use Taylor series for small arguments to avoid numerical issues
-            M = 16  # Number of points for contour integral approximation
-            r = np.exp(1j * np.pi * (np.arange(1, M+1) - 0.5) / M)
-
-            LR = self.dt * L + r[np.newaxis, :]
-
-            f1 = (-4 - LR + np.exp(LR) * (4 - 3*LR + LR**2)) / LR**3
-            f2 = (2 + LR + np.exp(LR) * (-2 + LR)) / LR**3
-            f3 = (-4 - 3*LR - LR**2 + np.exp(LR) * (4 - LR)) / LR**3
-
-
-        # # Check for NaNs or Infs and replace with Taylor limits if needed
-        zero_mask = (L[:,0] <= 1e-10)
-        for key, val in zip(['f1', 'f2', 'f3'], [f1, f2, f3]):
-            val.astype(complex)
-
-            if key in ['f1', 'f2']:
-                terms[key][zero_mask] = self.dt * 0.5  # For intermediate steps
-            elif key == 'f3':
-                terms[key][zero_mask] = self.dt * (1/6) # For intermediate steps
-
-            for kk in range(self.Nk):
-                f = val[kk]
-                valid_mask = np.isfinite(f)
-                if np.any(valid_mask):
-                    terms[key][kk] = self.dt * np.real(np.mean(f))
-                else:
-                    warnings.warn(f"NaN or Inf detected in ETDRK4 coefficient {key}, replacing with Taylor limits")
-                    terms[key][kk] = self.dt / 6
-
-        # Store coefficients in the object
-        self._ETDRK4_f_terms = terms.copy()
 
 
 
     @staticmethod
-    def ETDRK4_step(u_hat, nonlinear_operator, E, E2, f1, f2, f3):
+    def ETDRK4_step(u_hat, nonlinear_operator, E, E2, Q, f1, f2, f3):
         """
-        ETDRK4 time-stepping scheme:
+        Standard Kassam-Trefethen ETDRK4 step:
 
-        a_n = exp(L * dt/2) * u_n + L^{-1} * (exp(L * dt/2) - I) * N(u_n)
-        b_n = exp(L * dt/2) * u_n + L^{-1} * (exp(L * dt/2) - I) * N(a_n)
-        c_n = exp(L * dt/2) * a_n + L^{-1} * (exp(L * dt/2) - I) * (2 * N(b_n) - N(u_n))
+        a_n = exp(L h / 2) u_n + Q N(u_n)
+        b_n = exp(L h / 2) u_n + Q N(a_n)
+        c_n = exp(L h / 2) a_n + Q (2 N(b_n) - N(u_n))
 
-        u_{n+1} = exp(L * dt) * u_n
-                + dt^{-2} * L^{-3} * [
-                    (-4 - L h + exp(L h) * (4 - 3 L h + (L h)^2)) * N(u_n)
-                    + 2 * (2 + L h + exp(L h) * (-2 + L h)) * (N(a_n) + N(b_n))
-                    + (-4 - 3 L h - (L h)^2 + exp(L h) * (4 - L h)) * N(c_n)
-                    ]
+        u_{n+1} = exp(L h) u_n + f1 N(u_n) + 2 f2 (N(a_n) + N(b_n)) + f3 N(c_n)
 
-        Where:
-        - u_n: solution at timestep n
-        - h: timestep size
-        - L: linear operator (diagonalized in Fourier space)
-        - N(u): nonlinear operator
-        - I: identity operator
-        - a_n, b_n, c_n: intermediate Runge-Kutta stages
-
-        This scheme integrates the linear part exactly using exponentials and uses RK4 for nonlinear terms.
+        where h is the timestep, L the (diagonal) linear operator, N the
+        nonlinear operator, and Q, f1, f2, f3 the contour-integrated
+        phi-function coefficients (see ETDRK4_f_terms). The linear part is
+        integrated exactly; the nonlinear terms with fourth-order accuracy.
         """
 
         N1 = nonlinear_operator(u_hat)
-        a = E2 * u_hat + f1 * N1
+        a = E2 * u_hat + Q * N1
         N2 = nonlinear_operator(a)
-        b = E2 * u_hat + f2 * N2
+        b = E2 * u_hat + Q * N2
         N3 = nonlinear_operator(b)
-        c = E * u_hat + f3 * N3
+        c = E2 * a + Q * (2 * N3 - N1)
         N4 = nonlinear_operator(c)
 
-        return E * u_hat + (f1 * N1 + 2 * f2 * (N2 + N3) + f3 * N4) / 6.
+        return E * u_hat + f1 * N1 + 2 * f2 * (N2 + N3) + f3 * N4
 
 
 

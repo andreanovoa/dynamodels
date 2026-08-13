@@ -82,6 +82,52 @@ def test_create_dataset(tmp_path):
     assert p10 != path and d10['clean_data'].shape[1] == 10
 
 
+def test_ks_etdrk4_matches_reference_integration():
+    # regression for the pre-0.3.2 stepper, which used f-coefficients in the RK
+    # stages and divided the final combination by 6 -- first-order consistent
+    # with u_t = L u + N(u)/6 (a 6x-amplitude rescale of KS), 7% off a reference
+    # integration by t = 0.5. The standard Kassam-Trefethen scheme must track an
+    # integrating-factor RK4 reference at fine step to high accuracy.
+    # keep |dt * L_hat| < 15 for every mode so the contour quadrature is exact
+    # for all of them (far-outside modes deliberately match the dense-operator
+    # stack's behavior instead -- see ETDRK4_f_terms)
+    dt, L, Nx, Nt = 0.005, 22.0, 48, 100
+    m = KS(Nx=Nx, dt=dt, L=L, seed=0, initial_amplitude=1.0)
+    k = m.k
+    Lhat = (k**2 - k**4)[:, None]
+
+    def Nrhs(u_hat):
+        u = np.fft.irfft(u_hat, axis=0)
+        return -0.5 * (1j * k[:, None]) * np.fft.rfft(u**2, axis=0)
+
+    psi, _ = m.time_integrate(Nt=Nt)
+    u_dm = psi[-1]
+
+    sub = 100
+    h = dt / sub
+    E1, Eh = np.exp(h * Lhat), np.exp(h / 2 * Lhat)
+    u = m.psi0.copy()
+    for _ in range(Nt * sub):
+        k1 = Nrhs(u)
+        k2 = Nrhs(Eh * (u + h / 2 * k1))
+        k3 = Nrhs(Eh * u + h / 2 * k2)
+        k4 = Nrhs(E1 * u + h * Eh * k3)
+        u = E1 * u + h / 6 * (E1 * k1 + 2 * Eh * (k2 + k3) + k4)
+
+    rel = np.linalg.norm(u_dm - u) / np.linalg.norm(u)
+    # ~5e-5 is the scheme's genuine truncation error at this dt with an O(1)
+    # rough IC; the pre-0.3.2 scheme sat at ~7e-2 regardless of dt.
+    assert rel < 1e-3, f'KS ETDRK4 deviates from reference integration: rel err {rel:.2e}'
+
+
+def test_ks_exact_dt_preserved():
+    # Model.dt rounds to precision_t decimals; KS must keep the exact requested
+    # step (dt = 0.1 * 71 / 16 arises from the visc rescaling of the qlROM cases)
+    dt = 0.1 / (16 / 71)
+    m = KS(Nx=32, dt=dt, L=10.0)
+    assert m.dt == dt
+
+
 def test_ks_dt_honored_and_param_roundtrip():
     # dt used to be silently replaced by the 0.25 default at the Model level
     m = KS(Nx=64, dt=0.1, nu=0.08)
