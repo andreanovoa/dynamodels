@@ -5,7 +5,7 @@ import numpy as np
 import pytest
 
 import dynamodels
-from dynamodels.physical import KS, KS2D, Annular, Lorenz63, Lorenz96, Rijke, VdP
+from dynamodels.physical import KS, KS2D, Annular, Kuznetsov, Lorenz63, Lorenz96, Rijke, VdP
 
 
 def test_torch_free_import():
@@ -17,7 +17,7 @@ def test_torch_free_import():
 
 
 def test_models_integrate_smoke():
-    for cls, kwargs in [(Lorenz63, {}), (Lorenz96, dict(Nx=10)), (VdP, {}),
+    for cls, kwargs in [(Lorenz63, {}), (Lorenz96, dict(Nx=10)), (VdP, {}), (Kuznetsov, {}),
                         (Rijke, {}), (Annular, {}), (KS, {}),
                         (KS2D, dict(Nx=32, Ny=32, nu1=0.5, nu2=0.35, dt=0.1))]:
         model = cls(**kwargs)
@@ -28,6 +28,48 @@ def test_models_integrate_smoke():
         assert y.shape[1] == model.Nq, f'{cls.__name__} observables wrong shape'
         assert len(model.obs_labels) == model.Nq
         model.close()
+
+
+def test_ks2d_cases():
+    # defaults are the periodic regime; case= merges a named regime, and
+    # explicit kwargs win over the case values
+    m = KS2D()
+    assert (m.nu1, m.nu2, m.Nx, m.Ny, m.dt) == (0.5, 0.2, 32, 32, 0.01)
+    c = KS2D(case='chaotic')
+    assert (c.nu1, c.Nx, c.t_transient, c.t_CR) == (0.1, 64, 40., 4.)
+    assert c.Lhat.shape == (64, 64), 'case must be applied before the operator is built'
+    o = KS2D(case='chaotic', Nx=128, Ny=128)
+    assert o.Nx == 128 and o.nu1 == 0.1
+    with pytest.raises(ValueError):
+        KS2D(case='nope')
+    for mm in (m, c, o):
+        mm.close()
+
+
+def test_ks2d_estimable_nus():
+    # nu1/nu2 are estimable params with bounds; per-member alphas get their own
+    # ETDRK4 operators, matching independent single-nu runs from the same IC
+    m = KS2D()
+    assert m.alpha0 == dict(nu1=0.5, nu2=0.2)
+    assert m.alpha_lims['nu1'] == (0.01, 1.0) and m.alpha_lims['nu2'] == (0.01, 1.0)
+    u0 = m.psi0
+    two = KS2D(psi0=np.hstack([u0, u0]))
+    alphas = [dict(nu1=0.5, nu2=0.2), dict(nu1=0.5, nu2=0.35)]
+    psi, _ = two.time_step(Nt=20, alpha=alphas)
+    assert not np.allclose(psi[-1, :, 0], psi[-1, :, 1]), 'different nus must diverge'
+    for k, al in enumerate(alphas):
+        ref = KS2D(psi0=u0.copy(), **al)
+        psi_ref, _ = ref.time_step(Nt=20)
+        assert np.allclose(psi[:, :, k], psi_ref[:, :, 0]), f'member {k} deviates from its single-nu run'
+        ref.close()
+    # augmented ensemble: estimated-parameter rows ride through time_integrate
+    e = KS2D(t_transient=1.)  # keep init_ensemble's transient run short
+    e.init_ensemble(m=3, std_phi=0.1, est_alpha=['nu2'], std_alpha=0.1)
+    psi, t = e.time_integrate(Nt=5)
+    assert psi.shape[1] == e.Nphi + 1 and np.all(np.isfinite(psi))
+    assert np.allclose(psi[-1, -1], psi[0, -1]), 'estimated nu2 row must be carried unchanged'
+    for mm in (m, two, e):
+        mm.close()
 
 
 def test_t_lyap_tables():

@@ -17,7 +17,7 @@ from .history import HistoryTracker
 from .integrator import ConstantIntegrator, DiscreteIntegrator, Integrator, IVPIntegrator
 from .model import Model
 
-__version__ = "0.3.3"
+__version__ = "0.4.0"
 
 __all__ = [
     "Model",

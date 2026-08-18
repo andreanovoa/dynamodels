@@ -278,7 +278,7 @@ class Model:
 
 
     @property
-    def hist(self):
+    def hist(self) -> np.ndarray:
         """Returns only the valid (non-empty) portion of the history buffer."""
         return self.history.hist
 
@@ -1066,10 +1066,60 @@ class Model:
                 ax[1].set(xlabel=t_lbl, xlim=[t[-t_zoom], t[-1]])
 
 
-    def visualize_spatiotemporal_hist(self, reference_y=1.0, reference_t: float = 1.0, **kwargs):
-        """No-op hook for subclasses to plot spatiotemporal (e.g. field)
-        histories. Called by `visualize_history`."""
-        pass
+    def visualize_spatiotemporal_hist(self, y_hist=None, t=None, nrows=None, averaged=False,
+                                      reference_y=1.0, reference_t: float = 1.0, **kwargs):
+        """Space-time diagram of the state history: state index vs time.
+
+        Generic default plotting ``hist[:, :Nphi]`` directly — one panel per
+        ensemble member (up to ``nrows``), or the ensemble mean and standard
+        deviation with ``averaged=True``. Called by `visualize_history`. Same
+        signature as the physical-space overrides in `KS`, `Rijke` and
+        `Lorenz96`, which rewrite this when the raw state history is not the
+        physical field.
+        """
+        if y_hist is None:
+            y_hist = self.hist[:, :self.Nphi]
+        if t is None:
+            t = self.hist_t
+
+        (t,), t_lbl = normalized_time(reference_t, t)
+        assert t is not None
+        if reference_y != 1.0:
+            y_hist = y_hist / reference_y
+
+        N = y_hist.shape[1]
+        extent = [t[0], t[-1], -0.5, N - 0.5]
+
+        if not averaged:
+            if nrows is None:
+                nrows = min(10, y_hist.shape[-1])
+            fig = plt.figure(figsize=(8, 1.5 * nrows + 1), layout='constrained')
+            axs = np.atleast_1d(fig.subplots(nrows=nrows, sharex=True, sharey=True))
+            lim = np.max(abs(y_hist))
+            for mi, ax in enumerate(axs):
+                im = ax.imshow(y_hist[:, :, mi].T, aspect='auto', origin='lower',
+                               cmap='RdBu_r', vmin=-lim, vmax=lim, extent=extent)
+            axs[0].set(title=f'{self.name} state space-time evolution')
+            fig.colorbar(im, ax=axs, shrink=1 / nrows)
+        else:
+            fig, axs = plt.subplots(nrows=2, figsize=(8, 6), sharex=True, layout='constrained')
+            y_mean = np.mean(y_hist, axis=-1)
+            lim = np.max(abs(y_mean))
+            im0 = axs[0].imshow(y_mean.T, aspect='auto', origin='lower',
+                                cmap='RdBu_r', vmin=-lim, vmax=lim, extent=extent)
+            axs[0].set(title=f'{self.name} state space-time evolution (mean and std)')
+            fig.colorbar(im0, ax=axs[0])
+            y_std = np.std(y_hist, axis=-1, ddof=1)
+            im1 = axs[1].imshow(y_std.T, aspect='auto', origin='lower',
+                                cmap='magma', vmin=0, extent=extent)
+            fig.colorbar(im1, ax=axs[1])
+
+        axs[-1].set(xlabel=t_lbl)
+        for ax in axs:
+            if N <= 10:
+                ax.set(yticks=np.arange(N), yticklabels=self.state_labels[:N])
+            else:
+                ax.set(ylabel='state index')
 
 
 

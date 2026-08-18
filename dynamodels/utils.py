@@ -138,23 +138,18 @@ def mean_vector_to_ensemble(rng: np.random.Generator,
             perturbation = 1.0 + rng.uniform(-std, std, size=(mean_vec.size, m))
             ensemble_ = mean_vec[:, np.newaxis] * perturbation
 
-        else: # normal (using multivariate normal for state vector)
-
-            # Multiplicative uniform perturbation: mean * (1 +/- std)
-            # print(f'Creating normal ensemble with std={std} for mean_vec of shape {mean_vec.shape} and m={m}')
+        else: # normal: independent per-component perturbation, std relative to the mean
+            # The covariance is diagonal, so sample component-wise -- equivalent to
+            # multivariate_normal(mean, diag((mean*std)^2)) without its SVD of the
+            # (N, N) covariance, which dominated init_ensemble for field-sized states
+            def _normal(mu):
+                return mu[:, np.newaxis] + rng.normal(size=(mu.size, m)) * np.abs(mu * std)[:, np.newaxis]
 
             if np.iscomplexobj(mean_vec):
                 # Handle complex state by perturbing real and imaginary parts independently
-                # ensure we have a numpy array so static type checkers accept real/imag access
-                real_mu = np.real(mean_vec)
-                imag_mu = np.imag(mean_vec)
-                real_part = rng.multivariate_normal(real_mu, np.diag((real_mu * std) ** 2), size=m).T
-                imag_part = rng.multivariate_normal(imag_mu,  np.diag((imag_mu * std) ** 2), size=m).T
-                ensemble_ = real_part + 1j * imag_part
+                ensemble_ = _normal(np.real(mean_vec)) + 1j * _normal(np.imag(mean_vec))
             else:
-                # Covariance matrix is diagonal, perturbation scaled by mean and relative std
-                cov = np.diag((mean_vec * std) ** 2)
-                ensemble_ = rng.multivariate_normal(mean_vec, cov, size=m).T
+                ensemble_ = _normal(mean_vec)
 
     else:
         raise TypeError(f'Initial std must be a float or a dict, not {type(std)}')
