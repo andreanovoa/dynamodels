@@ -29,8 +29,8 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-    "pytest>=8.4",
-    "ruff",
+    "pytest>=9.0.3",  # CVE-2025-71176 (predictable /tmp handling)
+    "ruff>=0.11.5",  # CVE-2025-4574 (crossbeam-channel double-free)
 ]
 
 [project.urls]
