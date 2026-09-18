@@ -25,6 +25,16 @@ periodic regime), evenly spaced past the transient. Bottom: space-time
 diagram of the mid-domain slice $u(x, y=\ell, t)$, showing the pattern
 travel across the domain and repeat.*
 
+A single snapshot, or a 1-D slice's space-time diagram, cannot show how the
+whole 2-D field evolves. For the `chaotic` regime, an animation does:
+
+![Kuramoto-Sivashinsky 2-D chaotic field, animated](../img/ks2d_chaotic.gif)
+
+*`case='chaotic'` ($\nu_1=\nu_2=0.1$, $64\times64$): the field $u(x,y,t)$
+past the transient, sampled every few output steps. Structures merge, split
+and drift with no repeating pattern -- the two-dimensional analogue of the
+cellular chaos on the [1-D KS](ks.md) page.*
+
 ## Quickstart
 
 ```python
@@ -47,6 +57,18 @@ model.close()
 
 Explicit keyword arguments override a case's values, e.g.
 `KS2D(case='chaotic', Nx=128, Ny=128)`.
+
+## Nonlinear diagnostics
+
+![ntsa characterization of KS2D](../img/ntsa_characterize_ks2d.png)
+
+*Diagnostics from [`ntsa.characterize`](../analysis.md) on the chaotic case,
+at a single grid point, left to right: the observable time series with a
+zoomed inset; power spectral density; the 3-D delay-embedded portrait; the
+first-return map of the maxima; a plane-crossing Poincare section; a
+recurrence plot; a 3-D classical-MDS embedding of the full 2-D field; and
+the leading Lyapunov exponent, estimated Jacobian-free from perturbation
+growth since `KS2D` steps with `time_step` rather than `time_derivative`.*
 
 ## Reference
 

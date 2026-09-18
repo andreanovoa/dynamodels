@@ -31,6 +31,12 @@ section; a recurrence plot; a 3-D classical-MDS embedding of the full state,
 coloured by time; and the Lyapunov spectrum, with $\lambda_1 \approx 0.903$
 confirming the classification as chaotic.*
 
+Every model page on this site has its own "Nonlinear diagnostics" section
+with this same row, run for that model's own case — see, for instance,
+[Kuznetsov](models/kuznetsov.md#nonlinear-diagnostics), where the near-zero
+leading exponent confirms a quasiperiodic torus rather than chaos despite
+the broadband-looking time series.
+
 `ntsa` also exposes `classify_regime`, `bifurcation_sweep` and
 `lyapunov_spectrum` directly, and its `DataSeries` class runs the same
 diagnostics on a signal that was never produced by a `dynamodels` model — a

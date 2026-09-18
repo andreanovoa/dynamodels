@@ -39,6 +39,17 @@ model.close()
 Three components are observable by default (`observed_idx=[0, Nx//2, Nx-1]`);
 pass `observed_idx` to choose others.
 
+## Nonlinear diagnostics
+
+![ntsa characterization of Lorenz96](../img/ntsa_characterize_lorenz96.png)
+
+*Diagnostics from [`ntsa.characterize`](../analysis.md) on a single lattice
+site, left to right: the observable time series with a zoomed inset; power
+spectral density; the 3-D delay-embedded portrait; the first-return map of
+the maxima; a plane-crossing Poincare section; a recurrence plot; a 3-D
+classical-MDS embedding of the full 40-variable state; and the Lyapunov
+spectrum (analytic Jacobian, since `time_derivative` is available).*
+
 ## Reference
 
 Lorenz, E. N. (1996). Predictability: a problem partly solved. *Proceedings

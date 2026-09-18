@@ -36,6 +36,18 @@ model.visualize_observable_hist()
 model.close()
 ```
 
+## Nonlinear diagnostics
+
+![ntsa characterization of Kuznetsov](../img/ntsa_characterize_kuznetsov.png)
+
+*Diagnostics from [`ntsa.characterize`](../analysis.md), left to right: the
+observable time series with a zoomed inset; power spectral density, with two
+incommensurate peaks; the 3-D delay-embedded portrait, a torus rather than a
+fractal attractor; the first-return map and Poincare section, closed curves
+rather than point clouds; a recurrence plot; a 3-D classical-MDS embedding;
+and a near-zero leading Lyapunov exponent — quasiperiodic, not chaotic,
+despite the broadband-looking time series.*
+
 ## Reference
 
 Kuznetsov, A. P., Kuznetsov, S. P., & Stankevich, N. V. (2010). A simple

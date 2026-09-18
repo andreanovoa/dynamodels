@@ -36,6 +36,18 @@ model.close()
 `beta`, `zeta` and `kappa` are the estimable `params`, with physical bounds
 already set in `alpha_lims` for data-assimilation use.
 
+## Nonlinear diagnostics
+
+![ntsa characterization of Van der Pol](../img/ntsa_characterize_van_der_pol.png)
+
+*Diagnostics from [`ntsa.characterize`](../analysis.md), left to right: the
+observable time series with a zoomed inset; power spectral density, with a
+sharp fundamental and harmonics; the 3-D delay-embedded portrait, a single
+closed loop; the first-return map, a single point; a plane-crossing Poincare
+section; a recurrence plot of clean diagonal stripes; a 3-D classical-MDS
+embedding; and a near-zero leading Lyapunov exponent, as expected for a
+limit cycle.*
+
 ## Reference
 
 Novoa, A., & Magri, L. (2022). Real-time thermoacoustic data assimilation.

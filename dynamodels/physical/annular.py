@@ -5,6 +5,14 @@ import numpy as np
 from ..integrator import IVPIntegrator
 from ..model import Model
 
+# Named regimes from the class docstring's (nu, c2beta) examples.
+# Explicit kwargs win over the case.
+CASES = {
+    'spinning': {'nu': 30., 'c2beta': 5.},
+    'standing': {'nu': 0., 'c2beta': 50.},
+    'mixed': {'nu': 20., 'c2beta': 18.},
+}
+
 
 class Annular(Model):
     r"""Annular combustor — two coupled oscillators for the first azimuthal modes.
@@ -55,11 +63,16 @@ class Annular(Model):
     $\epsilon$ and phase $\Theta_\epsilon$, the frequency $\omega$ and the
     direction of maximum r.m.s. pressure $\Theta_\beta$.
 
-    Example dynamical regimes:
+    Three named regimes are pre-tabulated in `CASES` and selected with
+    ``case='...'`` (explicit keyword arguments override a case's values):
 
-    - purely spinning mode: $(\nu, c_2\beta) = (30, 5)$;
-    - purely standing mode: $(\nu, c_2\beta) = (0, 50)$;
-    - mixed mode: $(\nu, c_2\beta) = (20, 18)$.
+    - ``'spinning'``: purely spinning mode, $(\nu, c_2\beta) = (30, 5)$;
+    - ``'standing'``: purely standing mode, $(\nu, c_2\beta) = (0, 50)$;
+    - ``'mixed'``: mixed mode, $(\nu, c_2\beta) = (20, 18)$.
+
+    The class defaults (`ER=0.5`) give $\nu<0$, a linearly stable mode that
+    decays to the origin rather than self-oscillating; use a `case` or set
+    `nu`/`c2beta` explicitly for a self-sustained oscillation.
 
     References
     ----------
@@ -91,6 +104,13 @@ class Annular(Model):
 
     # __________________________ Init method ___________________________ #
     def __init__(self, **model_dict):
+
+        case = model_dict.pop('case', None)
+        if case is not None:
+            if case not in CASES:
+                raise ValueError(f"Unknown case '{case}'. Must be one of {list(CASES)}.")
+            for key, val in CASES[case].items():
+                model_dict.setdefault(key, val)  # explicit kwargs win over the case
 
         dt = model_dict.pop('dt', 1. / 51200)
         psi0 = model_dict.pop('psi0', None)
