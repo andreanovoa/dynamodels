@@ -7,3 +7,5 @@ build/
 .ruff_cache/
 figs/
 *.pkl
+site/
+docs/img/*.pdf

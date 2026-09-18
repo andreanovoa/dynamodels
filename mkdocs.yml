@@ -1,0 +1,70 @@
+site_name: dynamodels
+site_description: Dynamical-system models with history tracking and pluggable time integrators
+site_url: https://andreanovoa.github.io/dynamodels/
+repo_url: https://github.com/andreanovoa/dynamodels
+repo_name: andreanovoa/dynamodels
+
+theme:
+  name: material
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.sections
+    - content.code.copy
+
+markdown_extensions:
+  - admonition
+  - tables
+  - pymdownx.superfences
+  - pymdownx.arithmatex:
+      generic: true
+
+extra_javascript:
+  - js/mathjax.js
+  - https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [.]
+          options:
+            docstring_style: auto
+            docstring_options:
+              per_style_options:
+                google: {warn_unknown_params: false, warn_missing_types: false}
+                numpy: {warn_unknown_params: false, warn_missing_types: false}
+            show_source: true
+            members_order: source
+            show_root_heading: true
+
+nav:
+  - Home: index.md
+  - Getting started: getting-started.md
+  - Models:
+      - Lorenz63: models/lorenz63.md
+      - Lorenz96: models/lorenz96.md
+      - Van der Pol: models/van_der_pol.md
+      - Rijke tube: models/rijke.md
+      - Annular combustor: models/annular.md
+      - Kuramoto-Sivashinsky (1-D): models/ks.md
+      - Kuramoto-Sivashinsky (2-D): models/ks2d.md
+      - Kuznetsov oscillator: models/kuznetsov.md
+  - Analysing a model: analysis.md
+  - API reference:
+      - Model: api/model.md
+      - Integrator: api/integrator.md
+      - HistoryTracker: api/history.md
+      - utils: api/utils.md
