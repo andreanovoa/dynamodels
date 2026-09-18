@@ -266,3 +266,13 @@ def test_ks_two_parameter_form_matches_rescaled_construction():
     # precision_t by Model, so compare the exact steps they are built from)
     assert visc * rescaled.dt == pytest.approx(direct.dt, rel=1e-14)
     assert len(ta) == len(tb) == Nt + 1
+
+
+def test_lorenz96_nx10_lyapunov_table_between_onset_and_f8():
+    """The Nx = 10 table must follow the measured exponents inside the chaotic range: the earlier
+    three-point table log-interpolated 0.26 at F = 6.5 against a measured 0.75."""
+    from dynamodels.physical import Lorenz96
+    assert abs(Lorenz96(Nx=10, F=6.5).t_lyap - 1 / 0.7488) < 0.03 / 0.7488
+    assert abs(Lorenz96(Nx=10, F=5.5).t_lyap - 1 / 0.4832) < 0.03 / 0.4832
+    assert Lorenz96(Nx=10, F=8.0).t_lyap == 1 / 1.184          # keys the cached datasets
+    assert Lorenz96(Nx=10, F=4.0).t_lyap == Lorenz96.t_lyap    # below the chaotic range: fallback

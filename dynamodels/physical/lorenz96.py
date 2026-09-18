@@ -11,10 +11,15 @@ from ..utils import normalized_time
 # Dominant Lyapunov exponent lambda1(F), measured with dev/NTSA (Benettin QR,
 # adaptive halving-test convergence; 2026-08-05) at Nx=10 — lambda1 depends
 # strongly on Nx (F=5: 0.058 at Nx=10 vs 0.44 at Nx=40), hence the Nx check.
-# Chaotic points only (F <= 4.4 is LC/locked/QP at Nx=10); reference
-# lambda1(F=8, Nx=10) ~ 1.16. F=5 converges slowly (value at T=16000,
-# extrapolating to ~0.05). Extend with {F: lambda1} pairs from converged runs.
-_LAM1_MEASURED_NX10 = {4.6: 0.0391, 5.0: 0.058, 8.0: 1.184}
+# Chaotic points only (F <= 4.5 is LC/locked/QP at Nx=10; F=4.8 is a periodic window with
+# lambda1=0 and is left out, the log-interpolation between 4.7 and 4.9 covers it).
+# Benettin QR spectra with ntsa.tools.lyapunov_spectrum, converged (2026-09-18); the
+# F=8 entry is kept at its earlier value 1.184 (measured 1.203) because it keys the
+# cached Lorenz-96 datasets and networks of romda through t_lyap. Extend with
+# {F: lambda1} pairs from converged runs.
+_LAM1_MEASURED_NX10 = {4.6: 0.0391, 4.7: 0.051, 4.9: 0.0628, 5.0: 0.0511, 5.25: 0.3826,
+                       5.5: 0.4832, 5.75: 0.569, 6.0: 0.6003, 6.5: 0.7488, 7.0: 0.9568,
+                       7.5: 1.006, 8.0: 1.184}
 
 
 class Lorenz96(Model):
