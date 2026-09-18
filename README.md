@@ -10,8 +10,7 @@ integrators — the modelling core split out of
 reused on its own. Torch-free; depends only on numpy, scipy, matplotlib,
 typeguard and multiprocess.
 
-Tutorial: [`tutorial_dynamodels.ipynb`](tutorial_dynamodels.ipynb) | Interface
-documentation: [model protocol](https://andreanovoa.github.io/ntsa/protocol/)
+Tutorial: [`tutorial_dynamodels.ipynb`](tutorial_dynamodels.ipynb)
 
 ## Install
 
