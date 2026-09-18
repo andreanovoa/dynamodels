@@ -17,23 +17,57 @@ damping coefficients $C_1$, $C_2$, and the saturation $\kappa$; the
 observables are the pressure at `Nq` microphone locations. The full modal
 equations are in the [API reference](#api) below.
 
-![Rijke tube observable time evolution](../img/rijke.png)
-
-*Pressure at the six default microphone locations, $\beta=4$, past the
-transient. Left: the full run. Right: a few periods of the established
-thermoacoustic oscillation.*
+$\beta$ alone routes the system through a sequence of regimes, four of which
+are pre-tabulated in `CASES` and selected with `case='...'`.
 
 ## Quickstart
 
 ```python
 from dynamodels.physical import Rijke
 
-model = Rijke(beta=4., dt=1e-4)
+model = Rijke(case='limit_cycle', dt=1e-4)
 psi, t = model.time_integrate(Nt=5000)
 model.update_history(psi, t)
 model.visualize_observable_hist()
 model.close()
 ```
+
+## Regimes
+
+![Rijke tube, limit cycle](../img/rijke_limit_cycle.png)
+
+*`case='limit_cycle'` ($\beta=4$, the class default): a period-2 limit
+cycle, its two harmonics visible as the alternating tall/short peaks in the
+zoomed panel.*
+
+![Rijke tube, frequency-locked](../img/rijke_frequency_locked.png)
+
+*`case='frequency_locked'` ($\beta=8$): two modes lock onto a common
+period, giving the slow amplitude-modulated (beating) waveform in the
+zoomed panel.*
+
+![Rijke tube, chaotic](../img/rijke_chaotic.png)
+
+*`case='chaotic'` ($\beta=12$, measured $\lambda_1=161\,\mathrm{s^{-1}}$):
+an aperiodic, broadband pressure signal.*
+
+![Rijke tube, relaminarized](../img/rijke_relaminarized.png)
+
+*`case='relaminarized'` ($\beta=18$): past the chaotic window, the system
+relaminarizes onto a period-3 limit cycle at a larger amplitude.*
+
+## Nonlinear diagnostics
+
+![ntsa characterization of Rijke](../img/ntsa_characterize_rijke.png)
+
+*Diagnostics from [`ntsa.characterize`](../analysis.md) on the limit-cycle
+case, left to right: the observable time series with a zoomed inset; power
+spectral density; the 3-D delay-embedded portrait; the first-return map of
+the maxima; a plane-crossing Poincare section; a recurrence plot; and a 3-D
+classical-MDS embedding of the full modal state. The last panel (leading
+Lyapunov exponent) is blank here: for a limit cycle this close to neutral,
+the perturbation-growth fit's own reliability guard abstains rather than
+report a noisy estimate -- see [Analysing a model](../analysis.md).*
 
 ## Reference
 

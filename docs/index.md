@@ -31,10 +31,10 @@ scipy, matplotlib and typeguard: no machine-learning stack.
 
 ## Ecosystem
 
-- [`ntsa`](https://github.com/andreanovoa/ntsa) — nonlinear time-series analysis
+- [`ntsa`](https://andreanovoa.github.io/ntsa/) — nonlinear time-series analysis
   (Lyapunov exponents, delay embeddings, regime classification, bifurcation sweeps)
   for any model that follows the `dynamodels` protocol.
-- [romda](https://github.com/andreanovoa/real-time-bias-aware-DA) — bias-aware
+- [romda](https://andreanovoa.github.io/real-time-bias-aware-DA/) — bias-aware
   ensemble data assimilation built on top of both.
 
 ## Citing

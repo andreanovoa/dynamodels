@@ -41,6 +41,18 @@ for $\nu=1$ on that domain, or both for the general two-parameter form. See
 the class docstring below for the exact resolution rule and the rescaling
 that relates the two.
 
+## Nonlinear diagnostics
+
+![ntsa characterization of KS](../img/ntsa_characterize_ks.png)
+
+*Diagnostics from [`ntsa.characterize`](../analysis.md) on a single grid
+point, left to right: the observable time series with a zoomed inset; power
+spectral density; the 3-D delay-embedded portrait; the first-return map of
+the maxima; a plane-crossing Poincare section; a recurrence plot; a 3-D
+classical-MDS embedding of the full spectral state; and the leading Lyapunov
+exponent, estimated Jacobian-free from perturbation growth since `KS` steps
+with `time_step` rather than `time_derivative`.*
+
 ## Reference
 
 Kuramoto, Y., & Tsuzuki, T. (1976). Persistent propagation of concentration

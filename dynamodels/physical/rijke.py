@@ -16,6 +16,15 @@ from ..utils import Cheb, normalized_time
 # Extend with {beta: lambda1} pairs from converged dev/NTSA runs.
 _LAM1_MEASURED = {12.0: 161.0, 16.0: 161.0}
 
+# Named regimes along the beta route (class-default tau/C1/C2/kappa/law), from the
+# same sweep that produced _LAM1_MEASURED above. Explicit kwargs win over the case.
+CASES = {
+    'limit_cycle': {'beta': 4.0},        # period-2 limit cycle (beta <= 7); class default
+    'frequency_locked': {'beta': 8.0},   # frequency-locked (beta in [7.7, 8.5])
+    'chaotic': {'beta': 12.0},           # chaotic (measured lambda1 = 161.0)
+    'relaminarized': {'beta': 18.0},     # re-laminarizes to a period-3 limit cycle
+}
+
 
 # %% ==================================== RIJKE TUBE MODEL ============================================== %% #
 class Rijke(Model):
@@ -72,6 +81,11 @@ class Rijke(Model):
     $C_2$, and $\kappa$ (only active for ``law='tan'``). The observables are the
     pressure at ``Nq`` microphone locations.
 
+    Four named regimes along the $\beta$ route are pre-tabulated in `CASES` and
+    selected with ``case='...'``: ``'limit_cycle'`` (the class default, a period-2
+    limit cycle), ``'frequency_locked'``, ``'chaotic'``, and ``'relaminarized'``
+    (a period-3 limit cycle). Explicit keyword arguments override a case's values.
+
     References
     ----------
     Nóvoa & Magri (2022). Real-time thermoacoustic data assimilation.
@@ -101,6 +115,13 @@ class Rijke(Model):
     extra_print_params = ['law', 'Nm', 'Nc', 'xf', 'L']
 
     def __init__(self, **model_dict):
+
+        case = model_dict.pop('case', None)
+        if case is not None:
+            if case not in CASES:
+                raise ValueError(f"Unknown case '{case}'. Must be one of {list(CASES)}.")
+            for key, val in CASES[case].items():
+                model_dict.setdefault(key, val)  # explicit kwargs win over the case
 
         if 'psi0' not in model_dict.keys():
             if 'Nm' in model_dict.keys():

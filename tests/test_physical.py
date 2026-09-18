@@ -46,6 +46,33 @@ def test_ks2d_cases():
         mm.close()
 
 
+def test_annular_cases():
+    # explicit kwargs win over the case values
+    for case, (nu, c2beta) in [('spinning', (30., 5.)), ('standing', (0., 50.)),
+                               ('mixed', (20., 18.))]:
+        m = Annular(case=case)
+        assert (m.nu, m.c2beta) == (nu, c2beta)
+        m.close()
+    o = Annular(case='spinning', nu=99.)
+    assert o.nu == 99. and o.c2beta == 5.
+    o.close()
+    with pytest.raises(ValueError):
+        Annular(case='nope')
+
+
+def test_rijke_cases():
+    for case, beta in [('limit_cycle', 4.0), ('frequency_locked', 8.0),
+                       ('chaotic', 12.0), ('relaminarized', 18.0)]:
+        m = Rijke(case=case)
+        assert m.beta == beta
+        m.close()
+    o = Rijke(case='chaotic', beta=99.)
+    assert o.beta == 99.
+    o.close()
+    with pytest.raises(ValueError):
+        Rijke(case='nope')
+
+
 def test_ks2d_estimable_nus():
     # nu1/nu2 are estimable params with bounds; per-member alphas get their own
     # ETDRK4 operators, matching independent single-nu runs from the same IC

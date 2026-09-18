@@ -37,6 +37,17 @@ model.close()
 components are observable; `Lorenz63(observe_dims=[0])` restricts the model to
 observing $x$ alone, as in a partial-observation data-assimilation setup.
 
+## Nonlinear diagnostics
+
+![ntsa characterization of Lorenz63](../img/ntsa_characterize_lorenz63.png)
+
+*Diagnostics from [`ntsa.characterize`](../analysis.md), left to right: the
+observable time series with a zoomed inset; power spectral density; the 3-D
+delay-embedded portrait; the first-return map of the maxima; a
+plane-crossing Poincare section; a recurrence plot; a 3-D classical-MDS
+embedding of the full state; and the Lyapunov spectrum, confirming the
+chaotic classification.*
+
 ## Reference
 
 Lorenz, E. N. (1963). Deterministic nonperiodic flow. *Journal of the
