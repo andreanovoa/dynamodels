@@ -2,6 +2,7 @@
 
 [![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.21843588-blue.svg)](https://doi.org/10.5281/zenodo.21843588)
 [![PyPI](https://img.shields.io/pypi/v/dynamodels)](https://pypi.org/project/dynamodels/)
+[![Docs](https://img.shields.io/badge/docs-mkdocs-blue.svg)](https://andreanovoa.github.io/dynamodels/)
 
 Dynamical-system models with pre-allocated history tracking and pluggable time
 integrators — the modelling core split out of
@@ -9,10 +10,8 @@ integrators — the modelling core split out of
 reused on its own. Torch-free; depends only on numpy, scipy, matplotlib,
 typeguard and multiprocess.
 
-Docs: [andreanovoa.github.io/dynamodels](https://andreanovoa.github.io/dynamodels/)
-— one page per model, with the governing equations and a figure of its time
-evolution. Tutorial: [`tutorial_dynamodels.ipynb`](tutorial_dynamodels.ipynb)
-| Interface documentation: [model protocol](https://andreanovoa.github.io/ntsa/protocol/)
+Tutorial: [`tutorial_dynamodels.ipynb`](tutorial_dynamodels.ipynb) | Interface
+documentation: [model protocol](https://andreanovoa.github.io/ntsa/protocol/)
 
 ## Install
 
