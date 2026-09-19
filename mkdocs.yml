@@ -53,7 +53,8 @@ plugins:
 nav:
   - Home: index.md
   - Getting started: getting-started.md
-  - Models:
+  - Example usage: tutorials/tutorial_dynamodels.html
+  - Available Models:
       - Lorenz63: models/lorenz63.md
       - Lorenz96: models/lorenz96.md
       - Van der Pol: models/van_der_pol.md
@@ -62,10 +63,12 @@ nav:
       - Kuramoto-Sivashinsky (1-D): models/ks.md
       - Kuramoto-Sivashinsky (2-D): models/ks2d.md
       - Kuznetsov oscillator: models/kuznetsov.md
-  - Analysing a model: analysis.md
-  - Tutorials: tutorials.md
   - API reference:
       - Model: api/model.md
       - Integrator: api/integrator.md
       - HistoryTracker: api/history.md
       - utils: api/utils.md
+  - Learn more...:
+      - Tutorials on thermoacoustics: tutorials.md
+      - Characterizing a model: analysis.md
+  
