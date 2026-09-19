@@ -56,6 +56,17 @@ an aperiodic, broadband pressure signal.*
 *`case='relaminarized'` ($\beta=18$): past the chaotic window, the system
 relaminarizes onto a period-3 limit cycle at a larger amplitude.*
 
+The microphone traces above are samples of a field that fills the whole tube.
+For the chaotic case, an animation shows both at once:
+
+![Rijke tube, chaotic case, animated](../img/rijke_chaotic.gif)
+
+*`case='chaotic'` ($\beta=12$), past the transient. Top: the acoustic pressure
+$p'(x,t)$ along the tube, with the flame location $x_f=0.2$ dashed. Bottom: the
+same field sampled at the six microphones. The pressure node imposed by the
+open ends stays fixed while the amplitude varies aperiodically. The
+[Rijke tube tutorial](../tutorials.md) builds this figure step by step.*
+
 ## Nonlinear diagnostics
 
 ![ntsa characterization of Rijke](../img/ntsa_characterize_rijke.png)

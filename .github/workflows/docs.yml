@@ -15,5 +15,6 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
-      - run: pip install mkdocs-material "mkdocstrings[python]"
+      - run: pip install mkdocs-material "mkdocstrings[python]" nbconvert
+      - run: python -m nbconvert --to html tutorial_*.ipynb --output-dir docs/tutorials
       - run: mkdocs gh-deploy --force

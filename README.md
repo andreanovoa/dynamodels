@@ -10,7 +10,11 @@ integrators — the modelling core split out of
 reused on its own. Torch-free; depends only on numpy, scipy, matplotlib,
 typeguard and multiprocess.
 
-Tutorial: [`tutorial_dynamodels.ipynb`](tutorial_dynamodels.ipynb)
+Tutorials: [`tutorial_dynamodels.ipynb`](tutorial_dynamodels.ipynb) (the `Model`
+interface), [`tutorial_rijke.ipynb`](tutorial_rijke.ipynb) and
+[`tutorial_annular.ipynb`](tutorial_annular.ipynb) (the two thermoacoustic
+low-order models) — all rendered at
+[andreanovoa.github.io/dynamodels/tutorials](https://andreanovoa.github.io/dynamodels/tutorials/).
 
 ## Install
 
