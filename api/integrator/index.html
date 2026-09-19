@@ -1,0 +1,4236 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Dynamical-system models with history tracking and pluggable time integrators">
+      
+      
+      
+        <link rel="canonical" href="https://andreanovoa.github.io/dynamodels/api/integrator/">
+      
+      
+        <link rel="prev" href="../model/">
+      
+      
+        <link rel="next" href="../history/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Integrator - dynamodels</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#integrator" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="dynamodels" class="md-header__button md-logo" aria-label="dynamodels" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            dynamodels
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Integrator
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/andreanovoa/dynamodels" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    andreanovoa/dynamodels
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="dynamodels" class="md-nav__button md-logo" aria-label="dynamodels" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    dynamodels
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/andreanovoa/dynamodels" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    andreanovoa/dynamodels
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorials/tutorial_dynamodels.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Example usage
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Available Models
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Available Models
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../models/lorenz63/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lorenz63
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../models/lorenz96/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lorenz96
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../models/van_der_pol/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Van der Pol
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../models/rijke/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rijke tube
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../models/annular/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Annular combustor
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../models/ks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Kuramoto-Sivashinsky (1-D)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../models/ks2d/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Kuramoto-Sivashinsky (2-D)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../models/kuznetsov/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Kuznetsov oscillator
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Integrator
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Integrator
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#dynamodels.integrator.Integrator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Integrator
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Integrator">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dynamodels.integrator.Integrator.is_ensemble" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        is_ensemble
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dynamodels.integrator.Integrator.__init__" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        __init__
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dynamodels.integrator.Integrator.close" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        close
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dynamodels.integrator.Integrator.advance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        advance
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dynamodels.integrator.Integrator.advance_single" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        advance_single
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dynamodels.integrator.Integrator.advance_ensemble" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        advance_ensemble
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dynamodels.integrator.IVPIntegrator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        IVPIntegrator
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="IVPIntegrator">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dynamodels.integrator.IVPIntegrator.close" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        close
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dynamodels.integrator.IVPIntegrator.advance_single" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        advance_single
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dynamodels.integrator.IVPIntegrator.advance_ensemble" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        advance_ensemble
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dynamodels.integrator.DiscreteIntegrator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DiscreteIntegrator
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="DiscreteIntegrator">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dynamodels.integrator.DiscreteIntegrator.__init__" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        __init__
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dynamodels.integrator.DiscreteIntegrator.advance_single" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        advance_single
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dynamodels.integrator.DiscreteIntegrator.advance_ensemble" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        advance_ensemble
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dynamodels.integrator.ConstantIntegrator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ConstantIntegrator
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ConstantIntegrator">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dynamodels.integrator.ConstantIntegrator.__init__" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        __init__
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dynamodels.integrator.ConstantIntegrator.advance_single" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        advance_single
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dynamodels.integrator.ConstantIntegrator.advance_ensemble" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        advance_ensemble
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../history/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HistoryTracker
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../utils/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    utils
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Learn more...
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Learn more...
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorials/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tutorials on thermoacoustics
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Characterizing a model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#dynamodels.integrator.Integrator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Integrator
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Integrator">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dynamodels.integrator.Integrator.is_ensemble" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        is_ensemble
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dynamodels.integrator.Integrator.__init__" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        __init__
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dynamodels.integrator.Integrator.close" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        close
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dynamodels.integrator.Integrator.advance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        advance
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dynamodels.integrator.Integrator.advance_single" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        advance_single
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dynamodels.integrator.Integrator.advance_ensemble" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        advance_ensemble
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dynamodels.integrator.IVPIntegrator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        IVPIntegrator
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="IVPIntegrator">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dynamodels.integrator.IVPIntegrator.close" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        close
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dynamodels.integrator.IVPIntegrator.advance_single" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        advance_single
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dynamodels.integrator.IVPIntegrator.advance_ensemble" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        advance_ensemble
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dynamodels.integrator.DiscreteIntegrator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DiscreteIntegrator
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="DiscreteIntegrator">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dynamodels.integrator.DiscreteIntegrator.__init__" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        __init__
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dynamodels.integrator.DiscreteIntegrator.advance_single" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        advance_single
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dynamodels.integrator.DiscreteIntegrator.advance_ensemble" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        advance_ensemble
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dynamodels.integrator.ConstantIntegrator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ConstantIntegrator
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ConstantIntegrator">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dynamodels.integrator.ConstantIntegrator.__init__" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        __init__
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dynamodels.integrator.ConstantIntegrator.advance_single" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        advance_single
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dynamodels.integrator.ConstantIntegrator.advance_ensemble" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        advance_ensemble
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="integrator"><code>Integrator</code></h1>
+<p>Three time-integration strategies, selected at construction and shared by
+every model: <code>IVPIntegrator</code> for continuous systems (SciPy's <code>solve_ivp</code>,
+with a lazily created multiprocessing pool for <code>m &gt; 1</code> ensembles),
+<code>DiscreteIntegrator</code> for fixed-step maps such as the ETDRK4 scheme, and
+<code>ConstantIntegrator</code> for a frozen state.</p>
+
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="dynamodels.integrator.Integrator" class="doc doc-heading">
+            <code>dynamodels.integrator.Integrator</code>
+
+
+</h2>
+
+
+    <div class="doc doc-contents first">
+
+
+
+        <p>Abstract base class for the time-integration strategies.</p>
+<p>Defines the interface for advancing the model state; child classes implement
+<code>advance_single</code> and <code>advance_ensemble</code>. Three strategies are provided:</p>
+<ul>
+<li><code>IVPIntegrator</code> — continuous, variable-step integration with SciPy's
+  <code>solve_ivp</code> of <span class="arithmatex">\(\dot{\boldsymbol{\psi}} = f(t, \boldsymbol{\psi},
+  \boldsymbol{\alpha})\)</span>; the model must define <code>time_derivative</code>.</li>
+<li><code>DiscreteIntegrator</code> — fixed, discrete-step maps
+  <span class="arithmatex">\(\boldsymbol{\psi}_{t+\Delta t} = F(\boldsymbol{\psi}_t,
+  \boldsymbol{\alpha})\)</span> (e.g., ETDRK4, ESN); the model must define
+  <code>time_step</code>.</li>
+<li><code>ConstantIntegrator</code> — holds the state constant,
+  <span class="arithmatex">\(\boldsymbol{\psi}(t) = \boldsymbol{\psi}(0)\)</span>.</li>
+</ul>
+
+
+
+
+
+
+
+
+              <details class="mkdocstrings-source">
+                <summary>Source code in <code>dynamodels/integrator.py</code></summary>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 32</span>
+<span class="normal"> 33</span>
+<span class="normal"> 34</span>
+<span class="normal"> 35</span>
+<span class="normal"> 36</span>
+<span class="normal"> 37</span>
+<span class="normal"> 38</span>
+<span class="normal"> 39</span>
+<span class="normal"> 40</span>
+<span class="normal"> 41</span>
+<span class="normal"> 42</span>
+<span class="normal"> 43</span>
+<span class="normal"> 44</span>
+<span class="normal"> 45</span>
+<span class="normal"> 46</span>
+<span class="normal"> 47</span>
+<span class="normal"> 48</span>
+<span class="normal"> 49</span>
+<span class="normal"> 50</span>
+<span class="normal"> 51</span>
+<span class="normal"> 52</span>
+<span class="normal"> 53</span>
+<span class="normal"> 54</span>
+<span class="normal"> 55</span>
+<span class="normal"> 56</span>
+<span class="normal"> 57</span>
+<span class="normal"> 58</span>
+<span class="normal"> 59</span>
+<span class="normal"> 60</span>
+<span class="normal"> 61</span>
+<span class="normal"> 62</span>
+<span class="normal"> 63</span>
+<span class="normal"> 64</span>
+<span class="normal"> 65</span>
+<span class="normal"> 66</span>
+<span class="normal"> 67</span>
+<span class="normal"> 68</span>
+<span class="normal"> 69</span>
+<span class="normal"> 70</span>
+<span class="normal"> 71</span>
+<span class="normal"> 72</span>
+<span class="normal"> 73</span>
+<span class="normal"> 74</span>
+<span class="normal"> 75</span>
+<span class="normal"> 76</span>
+<span class="normal"> 77</span>
+<span class="normal"> 78</span>
+<span class="normal"> 79</span>
+<span class="normal"> 80</span>
+<span class="normal"> 81</span>
+<span class="normal"> 82</span>
+<span class="normal"> 83</span>
+<span class="normal"> 84</span>
+<span class="normal"> 85</span>
+<span class="normal"> 86</span>
+<span class="normal"> 87</span>
+<span class="normal"> 88</span>
+<span class="normal"> 89</span>
+<span class="normal"> 90</span>
+<span class="normal"> 91</span>
+<span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span>
+<span class="normal">108</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span>
+<span class="normal">112</span>
+<span class="normal">113</span>
+<span class="normal">114</span>
+<span class="normal">115</span>
+<span class="normal">116</span>
+<span class="normal">117</span>
+<span class="normal">118</span>
+<span class="normal">119</span>
+<span class="normal">120</span>
+<span class="normal">121</span>
+<span class="normal">122</span>
+<span class="normal">123</span>
+<span class="normal">124</span>
+<span class="normal">125</span>
+<span class="normal">126</span>
+<span class="normal">127</span>
+<span class="normal">128</span>
+<span class="normal">129</span>
+<span class="normal">130</span>
+<span class="normal">131</span>
+<span class="normal">132</span>
+<span class="normal">133</span>
+<span class="normal">134</span>
+<span class="normal">135</span>
+<span class="normal">136</span>
+<span class="normal">137</span>
+<span class="normal">138</span>
+<span class="normal">139</span>
+<span class="normal">140</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">Integrator</span><span class="p">:</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""Abstract base class for the time-integration strategies.</span>
+
+<span class="sd">    Defines the interface for advancing the model state; child classes implement</span>
+<span class="sd">    ``advance_single`` and ``advance_ensemble``. Three strategies are provided:</span>
+
+<span class="sd">    - `IVPIntegrator` — continuous, variable-step integration with SciPy's</span>
+<span class="sd">      ``solve_ivp`` of $\dot{\boldsymbol{\psi}} = f(t, \boldsymbol{\psi},</span>
+<span class="sd">      \boldsymbol{\alpha})$; the model must define ``time_derivative``.</span>
+<span class="sd">    - `DiscreteIntegrator` — fixed, discrete-step maps</span>
+<span class="sd">      $\boldsymbol{\psi}_{t+\Delta t} = F(\boldsymbol{\psi}_t,</span>
+<span class="sd">      \boldsymbol{\alpha})$ (e.g., ETDRK4, ESN); the model must define</span>
+<span class="sd">      ``time_step``.</span>
+<span class="sd">    - `ConstantIntegrator` — holds the state constant,</span>
+<span class="sd">      $\boldsymbol{\psi}(t) = \boldsymbol{\psi}(0)$.</span>
+<span class="sd">    """</span>
+
+    <span class="nd">@typechecked</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_instance</span><span class="p">:</span> <span class="nb">object</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Initialize the integrator with a model instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        model_instance : object</span>
+<span class="sd">            The (not necessarily `Model`) instance to integrate; must expose</span>
+<span class="sd">            `time_derivative`/`time_step`, `current_state`, `dt`, and the other</span>
+<span class="sd">            attributes each concrete strategy relies on.</span>
+<span class="sd">        """</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model_instance</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_ensemble</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""bool: True if `model.current_state` carries more than one member</span>
+<span class="sd">        (its last axis has size $&gt;1$), i.e. `advance` should dispatch to</span>
+<span class="sd">        `advance_ensemble` rather than `advance_single`.</span>
+<span class="sd">        """</span>
+        <span class="n">current_state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">current_state</span>
+        <span class="k">if</span> <span class="n">current_state</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&gt;=</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">current_state</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">""" Close resources held by the integrator (e.g., multiprocessing pools). """</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">advance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">averaged</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Common entry point for all integrators; dispatches to</span>
+<span class="sd">        `advance_single` or `advance_ensemble` based on `is_ensemble`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        averaged : bool</span>
+<span class="sd">            Forwarded to `advance_ensemble` when the model carries an</span>
+<span class="sd">            ensemble; ignored for a single member.</span>
+<span class="sd">        **kwargs</span>
+<span class="sd">            Forwarded to `advance_single` / `advance_ensemble` (typically</span>
+<span class="sd">            `Nt` and `alpha`).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        psi : ndarray</span>
+<span class="sd">            Forecasted state, excluding the initial condition.</span>
+<span class="sd">        t : ndarray</span>
+<span class="sd">            Corresponding time stamps.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_ensemble</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">advance_single</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">advance_ensemble</span><span class="p">(</span><span class="n">averaged</span><span class="o">=</span><span class="n">averaged</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">advance_single</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Advance a single (non-ensemble) member. Must be implemented by</span>
+<span class="sd">        child classes.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        psi : ndarray</span>
+<span class="sd">            Forecasted state, excluding the initial condition.</span>
+<span class="sd">        t : ndarray</span>
+<span class="sd">            Corresponding time stamps.</span>
+<span class="sd">        """</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">"Child Integrator class must implement the advance_single() method."</span><span class="p">)</span>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">advance_ensemble</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Nt</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span> <span class="n">averaged</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">alpha</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Advance every ensemble member. Must be implemented by child</span>
+<span class="sd">        classes.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        Nt : int</span>
+<span class="sd">            Number of forecast steps.</span>
+<span class="sd">        averaged : bool</span>
+<span class="sd">            Strategy-dependent flag controlling whether members are</span>
+<span class="sd">            propagated individually or only the ensemble mean is integrated.</span>
+<span class="sd">        alpha : dict, optional</span>
+<span class="sd">            Parameter values forwarded to the governing equations.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        psi : ndarray</span>
+<span class="sd">            Forecasted ensemble state, excluding the initial condition.</span>
+<span class="sd">        t : ndarray</span>
+<span class="sd">            Corresponding time stamps.</span>
+<span class="sd">        """</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">"Child Integrator class must implement the advance_ensemble() method."</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+              </details>
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="dynamodels.integrator.Integrator.is_ensemble" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">is_ensemble</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-property"><code>property</code></small>
+  </span>
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>bool: True if <code>model.current_state</code> carries more than one member
+(its last axis has size <span class="arithmatex">\(&gt;1\)</span>), i.e. <code>advance</code> should dispatch to
+<code>advance_ensemble</code> rather than <code>advance_single</code>.</p>
+
+    </div>
+
+</div>
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="dynamodels.integrator.Integrator.__init__" class="doc doc-heading">
+            <code class="highlight language-python"><span class="fm">__init__</span><span class="p">(</span><span class="n">model_instance</span><span class="p">)</span></code>
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Initialize the integrator with a model instance.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>model_instance</code>
+            </td>
+            <td>
+                  <code><span title="object">object</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The (not necessarily <code>Model</code>) instance to integrate; must expose
+<code>time_derivative</code>/<code>time_step</code>, <code>current_state</code>, <code>dt</code>, and the other
+attributes each concrete strategy relies on.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>dynamodels/integrator.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">49</span>
+<span class="normal">50</span>
+<span class="normal">51</span>
+<span class="normal">52</span>
+<span class="normal">53</span>
+<span class="normal">54</span>
+<span class="normal">55</span>
+<span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span>
+<span class="normal">59</span>
+<span class="normal">60</span>
+<span class="normal">61</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@typechecked</span>
+<span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_instance</span><span class="p">:</span> <span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Initialize the integrator with a model instance.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    model_instance : object</span>
+<span class="sd">        The (not necessarily `Model`) instance to integrate; must expose</span>
+<span class="sd">        `time_derivative`/`time_step`, `current_state`, `dt`, and the other</span>
+<span class="sd">        attributes each concrete strategy relies on.</span>
+<span class="sd">    """</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model_instance</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="dynamodels.integrator.Integrator.close" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">close</span><span class="p">()</span></code>
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Close resources held by the integrator (e.g., multiprocessing pools).</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>dynamodels/integrator.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">75</span>
+<span class="normal">76</span>
+<span class="normal">77</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">""" Close resources held by the integrator (e.g., multiprocessing pools). """</span>
+    <span class="k">pass</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="dynamodels.integrator.Integrator.advance" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">advance</span><span class="p">(</span><span class="n">averaged</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Common entry point for all integrators; dispatches to
+<code>advance_single</code> or <code>advance_ensemble</code> based on <code>is_ensemble</code>.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>averaged</code>
+            </td>
+            <td>
+                  <code><span title="bool">bool</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Forwarded to <code>advance_ensemble</code> when the model carries an
+ensemble; ignored for a single member.</p>
+              </div>
+            </td>
+            <td>
+                  <code>False</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>**kwargs</code>
+            </td>
+            <td>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Forwarded to <code>advance_single</code> / <code>advance_ensemble</code> (typically
+<code>Nt</code> and <code>alpha</code>).</p>
+              </div>
+            </td>
+            <td>
+                  <code>{}</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+<th>Name</th>          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+<td><code>psi</code></td>            <td>
+                  <code><span title="ndarray">ndarray</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Forecasted state, excluding the initial condition.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+<td><code>t</code></td>            <td>
+                  <code><span title="ndarray">ndarray</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Corresponding time stamps.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>dynamodels/integrator.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 79</span>
+<span class="normal"> 80</span>
+<span class="normal"> 81</span>
+<span class="normal"> 82</span>
+<span class="normal"> 83</span>
+<span class="normal"> 84</span>
+<span class="normal"> 85</span>
+<span class="normal"> 86</span>
+<span class="normal"> 87</span>
+<span class="normal"> 88</span>
+<span class="normal"> 89</span>
+<span class="normal"> 90</span>
+<span class="normal"> 91</span>
+<span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">advance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">averaged</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Common entry point for all integrators; dispatches to</span>
+<span class="sd">    `advance_single` or `advance_ensemble` based on `is_ensemble`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    averaged : bool</span>
+<span class="sd">        Forwarded to `advance_ensemble` when the model carries an</span>
+<span class="sd">        ensemble; ignored for a single member.</span>
+<span class="sd">    **kwargs</span>
+<span class="sd">        Forwarded to `advance_single` / `advance_ensemble` (typically</span>
+<span class="sd">        `Nt` and `alpha`).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    psi : ndarray</span>
+<span class="sd">        Forecasted state, excluding the initial condition.</span>
+<span class="sd">    t : ndarray</span>
+<span class="sd">        Corresponding time stamps.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_ensemble</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">advance_single</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">advance_ensemble</span><span class="p">(</span><span class="n">averaged</span><span class="o">=</span><span class="n">averaged</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="dynamodels.integrator.Integrator.advance_single" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">advance_single</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Advance a single (non-ensemble) member. Must be implemented by
+child classes.</p>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+<th>Name</th>          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+<td><code>psi</code></td>            <td>
+                  <code><span title="ndarray">ndarray</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Forecasted state, excluding the initial condition.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+<td><code>t</code></td>            <td>
+                  <code><span title="ndarray">ndarray</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Corresponding time stamps.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>dynamodels/integrator.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span>
+<span class="normal">108</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span>
+<span class="normal">112</span>
+<span class="normal">113</span>
+<span class="normal">114</span>
+<span class="normal">115</span>
+<span class="normal">116</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">advance_single</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Advance a single (non-ensemble) member. Must be implemented by</span>
+<span class="sd">    child classes.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    psi : ndarray</span>
+<span class="sd">        Forecasted state, excluding the initial condition.</span>
+<span class="sd">    t : ndarray</span>
+<span class="sd">        Corresponding time stamps.</span>
+<span class="sd">    """</span>
+    <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">"Child Integrator class must implement the advance_single() method."</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="dynamodels.integrator.Integrator.advance_ensemble" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">advance_ensemble</span><span class="p">(</span><span class="n">Nt</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">averaged</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Advance every ensemble member. Must be implemented by child
+classes.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>Nt</code>
+            </td>
+            <td>
+                  <code><span title="int">int</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Number of forecast steps.</p>
+              </div>
+            </td>
+            <td>
+                  <code>100</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>averaged</code>
+            </td>
+            <td>
+                  <code><span title="bool">bool</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Strategy-dependent flag controlling whether members are
+propagated individually or only the ensemble mean is integrated.</p>
+              </div>
+            </td>
+            <td>
+                  <code>False</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>alpha</code>
+            </td>
+            <td>
+                  <code><span title="dict">dict</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Parameter values forwarded to the governing equations.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+<th>Name</th>          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+<td><code>psi</code></td>            <td>
+                  <code><span title="ndarray">ndarray</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Forecasted ensemble state, excluding the initial condition.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+<td><code>t</code></td>            <td>
+                  <code><span title="ndarray">ndarray</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Corresponding time stamps.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>dynamodels/integrator.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">119</span>
+<span class="normal">120</span>
+<span class="normal">121</span>
+<span class="normal">122</span>
+<span class="normal">123</span>
+<span class="normal">124</span>
+<span class="normal">125</span>
+<span class="normal">126</span>
+<span class="normal">127</span>
+<span class="normal">128</span>
+<span class="normal">129</span>
+<span class="normal">130</span>
+<span class="normal">131</span>
+<span class="normal">132</span>
+<span class="normal">133</span>
+<span class="normal">134</span>
+<span class="normal">135</span>
+<span class="normal">136</span>
+<span class="normal">137</span>
+<span class="normal">138</span>
+<span class="normal">139</span>
+<span class="normal">140</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">advance_ensemble</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Nt</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span> <span class="n">averaged</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">alpha</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Advance every ensemble member. Must be implemented by child</span>
+<span class="sd">    classes.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    Nt : int</span>
+<span class="sd">        Number of forecast steps.</span>
+<span class="sd">    averaged : bool</span>
+<span class="sd">        Strategy-dependent flag controlling whether members are</span>
+<span class="sd">        propagated individually or only the ensemble mean is integrated.</span>
+<span class="sd">    alpha : dict, optional</span>
+<span class="sd">        Parameter values forwarded to the governing equations.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    psi : ndarray</span>
+<span class="sd">        Forecasted ensemble state, excluding the initial condition.</span>
+<span class="sd">    t : ndarray</span>
+<span class="sd">        Corresponding time stamps.</span>
+<span class="sd">    """</span>
+    <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">"Child Integrator class must implement the advance_ensemble() method."</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="dynamodels.integrator.IVPIntegrator" class="doc doc-heading">
+            <code>dynamodels.integrator.IVPIntegrator</code>
+
+
+</h2>
+
+
+    <div class="doc doc-contents first">
+            <p class="doc doc-class-bases">
+              Bases: <code><a class="autorefs autorefs-internal" title="dynamodels.integrator.Integrator" href="#dynamodels.integrator.Integrator">Integrator</a></code></p>
+
+
+
+        <p>Integrator using SciPy's <code>solve_ivp</code> for continuous, variable-step
+integration of <span class="arithmatex">\(\dot{\psi}=f(t,\psi,\alpha)\)</span>.</p>
+<p>The model must define <code>time_derivative(t, psi, **params)</code>. A single
+member is solved directly with <code>ivp_forecast_helper</code>; an ensemble is
+either solved member-by-member in parallel (a multiprocessing pool sized
+to <code>model.m</code>, created lazily) or, if <code>averaged=True</code>, solved once for
+the ensemble mean with each member's deviation from the mean left
+unchanged (see <code>advance_ensemble</code>).</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>model_instance</code>
+            </td>
+            <td>
+                  <code><span title="object">object</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>See <code>Integrator.__init__</code>.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>method</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Integration method forwarded to <code>scipy.integrate.solve_ivp</code>
+(default <code>'RK45'</code>).</p>
+              </div>
+            </td>
+            <td>
+                  <code>&#39;RK45&#39;</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+
+
+
+
+
+
+              <details class="mkdocstrings-source">
+                <summary>Source code in <code>dynamodels/integrator.py</code></summary>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">286</span>
+<span class="normal">287</span>
+<span class="normal">288</span>
+<span class="normal">289</span>
+<span class="normal">290</span>
+<span class="normal">291</span>
+<span class="normal">292</span>
+<span class="normal">293</span>
+<span class="normal">294</span>
+<span class="normal">295</span>
+<span class="normal">296</span>
+<span class="normal">297</span>
+<span class="normal">298</span>
+<span class="normal">299</span>
+<span class="normal">300</span>
+<span class="normal">301</span>
+<span class="normal">302</span>
+<span class="normal">303</span>
+<span class="normal">304</span>
+<span class="normal">305</span>
+<span class="normal">306</span>
+<span class="normal">307</span>
+<span class="normal">308</span>
+<span class="normal">309</span>
+<span class="normal">310</span>
+<span class="normal">311</span>
+<span class="normal">312</span>
+<span class="normal">313</span>
+<span class="normal">314</span>
+<span class="normal">315</span>
+<span class="normal">316</span>
+<span class="normal">317</span>
+<span class="normal">318</span>
+<span class="normal">319</span>
+<span class="normal">320</span>
+<span class="normal">321</span>
+<span class="normal">322</span>
+<span class="normal">323</span>
+<span class="normal">324</span>
+<span class="normal">325</span>
+<span class="normal">326</span>
+<span class="normal">327</span>
+<span class="normal">328</span>
+<span class="normal">329</span>
+<span class="normal">330</span>
+<span class="normal">331</span>
+<span class="normal">332</span>
+<span class="normal">333</span>
+<span class="normal">334</span>
+<span class="normal">335</span>
+<span class="normal">336</span>
+<span class="normal">337</span>
+<span class="normal">338</span>
+<span class="normal">339</span>
+<span class="normal">340</span>
+<span class="normal">341</span>
+<span class="normal">342</span>
+<span class="normal">343</span>
+<span class="normal">344</span>
+<span class="normal">345</span>
+<span class="normal">346</span>
+<span class="normal">347</span>
+<span class="normal">348</span>
+<span class="normal">349</span>
+<span class="normal">350</span>
+<span class="normal">351</span>
+<span class="normal">352</span>
+<span class="normal">353</span>
+<span class="normal">354</span>
+<span class="normal">355</span>
+<span class="normal">356</span>
+<span class="normal">357</span>
+<span class="normal">358</span>
+<span class="normal">359</span>
+<span class="normal">360</span>
+<span class="normal">361</span>
+<span class="normal">362</span>
+<span class="normal">363</span>
+<span class="normal">364</span>
+<span class="normal">365</span>
+<span class="normal">366</span>
+<span class="normal">367</span>
+<span class="normal">368</span>
+<span class="normal">369</span>
+<span class="normal">370</span>
+<span class="normal">371</span>
+<span class="normal">372</span>
+<span class="normal">373</span>
+<span class="normal">374</span>
+<span class="normal">375</span>
+<span class="normal">376</span>
+<span class="normal">377</span>
+<span class="normal">378</span>
+<span class="normal">379</span>
+<span class="normal">380</span>
+<span class="normal">381</span>
+<span class="normal">382</span>
+<span class="normal">383</span>
+<span class="normal">384</span>
+<span class="normal">385</span>
+<span class="normal">386</span>
+<span class="normal">387</span>
+<span class="normal">388</span>
+<span class="normal">389</span>
+<span class="normal">390</span>
+<span class="normal">391</span>
+<span class="normal">392</span>
+<span class="normal">393</span>
+<span class="normal">394</span>
+<span class="normal">395</span>
+<span class="normal">396</span>
+<span class="normal">397</span>
+<span class="normal">398</span>
+<span class="normal">399</span>
+<span class="normal">400</span>
+<span class="normal">401</span>
+<span class="normal">402</span>
+<span class="normal">403</span>
+<span class="normal">404</span>
+<span class="normal">405</span>
+<span class="normal">406</span>
+<span class="normal">407</span>
+<span class="normal">408</span>
+<span class="normal">409</span>
+<span class="normal">410</span>
+<span class="normal">411</span>
+<span class="normal">412</span>
+<span class="normal">413</span>
+<span class="normal">414</span>
+<span class="normal">415</span>
+<span class="normal">416</span>
+<span class="normal">417</span>
+<span class="normal">418</span>
+<span class="normal">419</span>
+<span class="normal">420</span>
+<span class="normal">421</span>
+<span class="normal">422</span>
+<span class="normal">423</span>
+<span class="normal">424</span>
+<span class="normal">425</span>
+<span class="normal">426</span>
+<span class="normal">427</span>
+<span class="normal">428</span>
+<span class="normal">429</span>
+<span class="normal">430</span>
+<span class="normal">431</span>
+<span class="normal">432</span>
+<span class="normal">433</span>
+<span class="normal">434</span>
+<span class="normal">435</span>
+<span class="normal">436</span>
+<span class="normal">437</span>
+<span class="normal">438</span>
+<span class="normal">439</span>
+<span class="normal">440</span>
+<span class="normal">441</span>
+<span class="normal">442</span>
+<span class="normal">443</span>
+<span class="normal">444</span>
+<span class="normal">445</span>
+<span class="normal">446</span>
+<span class="normal">447</span>
+<span class="normal">448</span>
+<span class="normal">449</span>
+<span class="normal">450</span>
+<span class="normal">451</span>
+<span class="normal">452</span>
+<span class="normal">453</span>
+<span class="normal">454</span>
+<span class="normal">455</span>
+<span class="normal">456</span>
+<span class="normal">457</span>
+<span class="normal">458</span>
+<span class="normal">459</span>
+<span class="normal">460</span>
+<span class="normal">461</span>
+<span class="normal">462</span>
+<span class="normal">463</span>
+<span class="normal">464</span>
+<span class="normal">465</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">IVPIntegrator</span><span class="p">(</span><span class="n">Integrator</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""Integrator using SciPy's `solve_ivp` for continuous, variable-step</span>
+<span class="sd">    integration of $\dot{\psi}=f(t,\psi,\alpha)$.</span>
+
+<span class="sd">    The model must define ``time_derivative(t, psi, **params)``. A single</span>
+<span class="sd">    member is solved directly with `ivp_forecast_helper`; an ensemble is</span>
+<span class="sd">    either solved member-by-member in parallel (a multiprocessing pool sized</span>
+<span class="sd">    to `model.m`, created lazily) or, if ``averaged=True``, solved once for</span>
+<span class="sd">    the ensemble mean with each member's deviation from the mean left</span>
+<span class="sd">    unchanged (see `advance_ensemble`).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    model_instance : object</span>
+<span class="sd">        See `Integrator.__init__`.</span>
+<span class="sd">    method : str</span>
+<span class="sd">        Integration method forwarded to `scipy.integrate.solve_ivp`</span>
+<span class="sd">        (default ``'RK45'``).</span>
+<span class="sd">    """</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_instance</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">'RK45'</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">model_instance</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">method</span> <span class="o">=</span> <span class="n">method</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">__pool</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'_pool'</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_pool</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pool</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">m</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="c1"># Initialize multiprocessing pool</span>
+            <span class="n">N_pools</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">m</span><span class="p">,</span> <span class="n">mp</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">())</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Initializing multiprocessing pool for IVPIntegrator with m=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">m</span><span class="si">}</span><span class="s1"> and </span><span class="si">{</span><span class="n">N_pools</span><span class="si">}</span><span class="s1"> pools.'</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_pool</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">Pool</span><span class="p">(</span><span class="n">N_pools</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pool</span>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Terminate and join the multiprocessing pool, if one was created."""</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'_pool'</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pool</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_pool</span><span class="o">.</span><span class="n">terminate</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_pool</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_pool</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># pickling a model mid-run must not require a manual close(): drop the</span>
+        <span class="c1"># live pool (unpicklable); it is lazily re-created on the next forecast</span>
+        <span class="n">state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">state</span><span class="p">[</span><span class="s1">'_pool'</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="n">state</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__deepcopy__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">memo</span><span class="p">):</span>
+        <span class="c1"># Always close the pool before copying so the copy starts with no pool.</span>
+        <span class="c1"># Re-creating a Pool inside a process that already owns one can deadlock</span>
+        <span class="c1"># on macOS (fork-based mp).</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="bp">cls</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span>
+        <span class="n">memo</span><span class="p">[</span><span class="nb">id</span><span class="p">(</span><span class="bp">self</span><span class="p">)]</span> <span class="o">=</span> <span class="n">result</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">memo</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">advance_single</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Nt</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span> <span class="n">averaged</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">alpha</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Solve the IVP for the single (non-ensemble) member.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        Nt : int</span>
+<span class="sd">            Number of forecast steps.</span>
+<span class="sd">        averaged : bool</span>
+<span class="sd">            Accepted for interface compatibility with `advance_ensemble` but</span>
+<span class="sd">            not used: with one member there is nothing to average.</span>
+<span class="sd">        alpha : dict, optional</span>
+<span class="sd">            Accepted for interface compatibility but not used: the governing</span>
+<span class="sd">            equations are called with ``{**model.alpha0, **model.governing_eqns_params}``</span>
+<span class="sd">            directly rather than with this argument.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        psi : ndarray, shape ``(Nt, N, 1)``</span>
+<span class="sd">            Forecasted state, excluding the initial condition.</span>
+<span class="sd">        t : ndarray, shape ``(Nt,)``</span>
+<span class="sd">            Time stamps spaced by `model.dt`.</span>
+<span class="sd">        """</span>
+        <span class="c1"># print('Using IVPIntegrator advance_single')</span>
+        <span class="n">pm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span>
+
+        <span class="n">t_all</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">pm</span><span class="o">.</span><span class="n">current_time</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">Nt</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">pm</span><span class="o">.</span><span class="n">dt</span><span class="p">,</span> <span class="n">pm</span><span class="o">.</span><span class="n">precision_t</span><span class="p">)</span>
+
+        <span class="n">psi0</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">current_state</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">governing_eqns_params</span>
+
+        <span class="c1"># --- IVP Logic</span>
+        <span class="n">psi</span> <span class="o">=</span> <span class="p">[</span><span class="n">ivp_forecast_helper</span><span class="p">(</span><span class="n">y0</span><span class="o">=</span><span class="n">psi0</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span>
+                                    <span class="n">fun</span><span class="o">=</span><span class="n">pm</span><span class="o">.</span><span class="n">time_derivative</span><span class="p">,</span>
+                                    <span class="n">t</span><span class="o">=</span><span class="n">t_all</span><span class="p">,</span>
+                                    <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="o">**</span><span class="n">pm</span><span class="o">.</span><span class="n">alpha0</span><span class="p">,</span> <span class="o">**</span><span class="n">args</span><span class="p">})]</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">psi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">psi</span><span class="p">)</span><span class="o">.</span><span class="n">transpose</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+        <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Error during final array construction: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+            <span class="n">psi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">psi</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">psi0</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">pm</span><span class="o">.</span><span class="n">m</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">psi</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">t_all</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">advance_ensemble</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Nt</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">averaged</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""Solve the IVP for every ensemble member.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        Nt : int</span>
+<span class="sd">            Number of forecast steps.</span>
+<span class="sd">        averaged : bool</span>
+<span class="sd">            If False (default), each member is solved independently and in</span>
+<span class="sd">            parallel (via a multiprocessing pool), each with its own</span>
+<span class="sd">            parameters from `model.get_alpha`. If True, the IVP is solved</span>
+<span class="sd">            once for the ensemble *mean* $\overline{\psi}_0$, and each</span>
+<span class="sd">            member's forecast is reconstructed as</span>
+<span class="sd">            $\overline{\psi}(t) + (\psi_{0,i}-\overline{\psi}_0)$, i.e. its</span>
+<span class="sd">            initial deviation from the mean is carried forward unchanged</span>
+<span class="sd">            rather than being independently propagated.</span>
+<span class="sd">        alpha : dict, optional</span>
+<span class="sd">            Accepted for interface compatibility but not used: parameters are</span>
+<span class="sd">            always taken from `model.get_alpha` (or `model.get_alpha` on the</span>
+<span class="sd">            ensemble mean, if `averaged`).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        psi : ndarray, shape ``(Nt, N, m)``</span>
+<span class="sd">            Forecasted ensemble state, excluding the initial condition.</span>
+<span class="sd">        t : ndarray, shape ``(Nt,)``</span>
+<span class="sd">            Time stamps spaced by `model.dt`.</span>
+<span class="sd">        """</span>
+        <span class="n">pm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span>
+
+        <span class="n">t_all</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">pm</span><span class="o">.</span><span class="n">current_time</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">Nt</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">pm</span><span class="o">.</span><span class="n">dt</span><span class="p">,</span> <span class="n">pm</span><span class="o">.</span><span class="n">precision_t</span><span class="p">)</span>
+
+        <span class="n">psi0</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">current_state</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">governing_eqns_params</span>
+
+        <span class="c1"># --- IVP Logic (Similar to previous Model.time_integrate) ---</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">averaged</span><span class="p">:</span>
+            <span class="c1"># Ensemble run (using multiprocessing pool)</span>
+            <span class="n">alpha_list</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">get_alpha</span><span class="p">()</span>
+            <span class="n">forecast_part</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">ivp_forecast_helper</span><span class="p">,</span>
+                                    <span class="n">fun</span><span class="o">=</span><span class="n">pm</span><span class="o">.</span><span class="n">time_derivative</span><span class="p">,</span> <span class="n">t</span><span class="o">=</span><span class="n">t_all</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">method</span><span class="p">)</span>
+
+            <span class="n">sol</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">__pool</span><span class="o">.</span><span class="n">apply_async</span><span class="p">(</span><span class="n">forecast_part</span><span class="p">,</span>
+                                            <span class="n">kwds</span><span class="o">=</span><span class="p">{</span><span class="s1">'y0'</span><span class="p">:</span> <span class="n">psi0</span><span class="p">[:,</span> <span class="n">mi</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="s1">'params'</span><span class="p">:</span> <span class="p">{</span><span class="o">**</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">alpha_list</span><span class="p">[</span><span class="n">mi</span><span class="p">]}})</span>
+                    <span class="k">for</span> <span class="n">mi</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">pm</span><span class="o">.</span><span class="n">m</span><span class="p">)]</span>
+
+            <span class="n">psi</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">()</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sol</span><span class="p">]</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Averaged forecast</span>
+            <span class="n">psi_mean0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">psi0</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">psi_deviation</span> <span class="o">=</span> <span class="n">psi0</span> <span class="o">-</span> <span class="n">psi_mean0</span>
+            <span class="n">alpha</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">get_alpha</span><span class="p">(</span><span class="n">psi_mean0</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+            <span class="n">psi_mean</span> <span class="o">=</span> <span class="n">ivp_forecast_helper</span><span class="p">(</span><span class="n">y0</span><span class="o">=</span><span class="n">psi_mean0</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span>
+                                            <span class="n">fun</span><span class="o">=</span><span class="n">pm</span><span class="o">.</span><span class="n">time_derivative</span><span class="p">,</span>
+                                            <span class="n">t</span><span class="o">=</span><span class="n">t_all</span><span class="p">,</span>
+                                            <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="o">**</span><span class="n">alpha</span><span class="p">,</span> <span class="o">**</span><span class="n">args</span><span class="p">},</span>
+                                            <span class="n">method</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">method</span><span class="p">)</span>
+
+            <span class="n">psi</span> <span class="o">=</span> <span class="p">[</span><span class="n">psi_mean</span> <span class="o">+</span> <span class="n">psi_deviation</span><span class="p">[:,</span> <span class="n">ii</span><span class="p">]</span> <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">pm</span><span class="o">.</span><span class="n">m</span><span class="p">)]</span>
+
+
+        <span class="c1"># Rearrange dimensions to be Nt+1 x N x m and remove initial condition</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">psi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">psi</span><span class="p">)</span><span class="o">.</span><span class="n">transpose</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+        <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Error during final array construction: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+            <span class="n">psi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">psi</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">psi0</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">pm</span><span class="o">.</span><span class="n">m</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">psi</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">t_all</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+</code></pre></div></td></tr></table></div>
+              </details>
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="dynamodels.integrator.IVPIntegrator.close" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">close</span><span class="p">()</span></code>
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Terminate and join the multiprocessing pool, if one was created.</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>dynamodels/integrator.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">323</span>
+<span class="normal">324</span>
+<span class="normal">325</span>
+<span class="normal">326</span>
+<span class="normal">327</span>
+<span class="normal">328</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Terminate and join the multiprocessing pool, if one was created."""</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'_pool'</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pool</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_pool</span><span class="o">.</span><span class="n">terminate</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_pool</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_pool</span> <span class="o">=</span> <span class="kc">None</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="dynamodels.integrator.IVPIntegrator.advance_single" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">advance_single</span><span class="p">(</span><span class="n">Nt</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">averaged</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Solve the IVP for the single (non-ensemble) member.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>Nt</code>
+            </td>
+            <td>
+                  <code><span title="int">int</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Number of forecast steps.</p>
+              </div>
+            </td>
+            <td>
+                  <code>100</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>averaged</code>
+            </td>
+            <td>
+                  <code><span title="bool">bool</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Accepted for interface compatibility with <code>advance_ensemble</code> but
+not used: with one member there is nothing to average.</p>
+              </div>
+            </td>
+            <td>
+                  <code>False</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>alpha</code>
+            </td>
+            <td>
+                  <code><span title="dict">dict</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Accepted for interface compatibility but not used: the governing
+equations are called with <code>{**model.alpha0, **model.governing_eqns_params}</code>
+directly rather than with this argument.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+<th>Name</th>          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+<td><code>psi</code></td>            <td>
+                  <code>ndarray, shape ``(Nt, N, 1)``</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Forecasted state, excluding the initial condition.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+<td><code>t</code></td>            <td>
+                  <code>ndarray, shape ``(Nt,)``</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Time stamps spaced by <code>model.dt</code>.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>dynamodels/integrator.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">349</span>
+<span class="normal">350</span>
+<span class="normal">351</span>
+<span class="normal">352</span>
+<span class="normal">353</span>
+<span class="normal">354</span>
+<span class="normal">355</span>
+<span class="normal">356</span>
+<span class="normal">357</span>
+<span class="normal">358</span>
+<span class="normal">359</span>
+<span class="normal">360</span>
+<span class="normal">361</span>
+<span class="normal">362</span>
+<span class="normal">363</span>
+<span class="normal">364</span>
+<span class="normal">365</span>
+<span class="normal">366</span>
+<span class="normal">367</span>
+<span class="normal">368</span>
+<span class="normal">369</span>
+<span class="normal">370</span>
+<span class="normal">371</span>
+<span class="normal">372</span>
+<span class="normal">373</span>
+<span class="normal">374</span>
+<span class="normal">375</span>
+<span class="normal">376</span>
+<span class="normal">377</span>
+<span class="normal">378</span>
+<span class="normal">379</span>
+<span class="normal">380</span>
+<span class="normal">381</span>
+<span class="normal">382</span>
+<span class="normal">383</span>
+<span class="normal">384</span>
+<span class="normal">385</span>
+<span class="normal">386</span>
+<span class="normal">387</span>
+<span class="normal">388</span>
+<span class="normal">389</span>
+<span class="normal">390</span>
+<span class="normal">391</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">advance_single</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Nt</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span> <span class="n">averaged</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">alpha</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Solve the IVP for the single (non-ensemble) member.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    Nt : int</span>
+<span class="sd">        Number of forecast steps.</span>
+<span class="sd">    averaged : bool</span>
+<span class="sd">        Accepted for interface compatibility with `advance_ensemble` but</span>
+<span class="sd">        not used: with one member there is nothing to average.</span>
+<span class="sd">    alpha : dict, optional</span>
+<span class="sd">        Accepted for interface compatibility but not used: the governing</span>
+<span class="sd">        equations are called with ``{**model.alpha0, **model.governing_eqns_params}``</span>
+<span class="sd">        directly rather than with this argument.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    psi : ndarray, shape ``(Nt, N, 1)``</span>
+<span class="sd">        Forecasted state, excluding the initial condition.</span>
+<span class="sd">    t : ndarray, shape ``(Nt,)``</span>
+<span class="sd">        Time stamps spaced by `model.dt`.</span>
+<span class="sd">    """</span>
+    <span class="c1"># print('Using IVPIntegrator advance_single')</span>
+    <span class="n">pm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span>
+
+    <span class="n">t_all</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">pm</span><span class="o">.</span><span class="n">current_time</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">Nt</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">pm</span><span class="o">.</span><span class="n">dt</span><span class="p">,</span> <span class="n">pm</span><span class="o">.</span><span class="n">precision_t</span><span class="p">)</span>
+
+    <span class="n">psi0</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">current_state</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">governing_eqns_params</span>
+
+    <span class="c1"># --- IVP Logic</span>
+    <span class="n">psi</span> <span class="o">=</span> <span class="p">[</span><span class="n">ivp_forecast_helper</span><span class="p">(</span><span class="n">y0</span><span class="o">=</span><span class="n">psi0</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span>
+                                <span class="n">fun</span><span class="o">=</span><span class="n">pm</span><span class="o">.</span><span class="n">time_derivative</span><span class="p">,</span>
+                                <span class="n">t</span><span class="o">=</span><span class="n">t_all</span><span class="p">,</span>
+                                <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="o">**</span><span class="n">pm</span><span class="o">.</span><span class="n">alpha0</span><span class="p">,</span> <span class="o">**</span><span class="n">args</span><span class="p">})]</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">psi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">psi</span><span class="p">)</span><span class="o">.</span><span class="n">transpose</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Error during final array construction: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="n">psi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">psi</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">psi0</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">pm</span><span class="o">.</span><span class="n">m</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">psi</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">t_all</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="dynamodels.integrator.IVPIntegrator.advance_ensemble" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">advance_ensemble</span><span class="p">(</span><span class="n">Nt</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">averaged</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Solve the IVP for every ensemble member.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>Nt</code>
+            </td>
+            <td>
+                  <code><span title="int">int</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Number of forecast steps.</p>
+              </div>
+            </td>
+            <td>
+                  <code>100</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>averaged</code>
+            </td>
+            <td>
+                  <code><span title="bool">bool</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>If False (default), each member is solved independently and in
+parallel (via a multiprocessing pool), each with its own
+parameters from <code>model.get_alpha</code>. If True, the IVP is solved
+once for the ensemble <em>mean</em> <span class="arithmatex">\(\overline{\psi}_0\)</span>, and each
+member's forecast is reconstructed as
+<span class="arithmatex">\(\overline{\psi}(t) + (\psi_{0,i}-\overline{\psi}_0)\)</span>, i.e. its
+initial deviation from the mean is carried forward unchanged
+rather than being independently propagated.</p>
+              </div>
+            </td>
+            <td>
+                  <code>False</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>alpha</code>
+            </td>
+            <td>
+                  <code><span title="dict">dict</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Accepted for interface compatibility but not used: parameters are
+always taken from <code>model.get_alpha</code> (or <code>model.get_alpha</code> on the
+ensemble mean, if <code>averaged</code>).</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+<th>Name</th>          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+<td><code>psi</code></td>            <td>
+                  <code>ndarray, shape ``(Nt, N, m)``</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Forecasted ensemble state, excluding the initial condition.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+<td><code>t</code></td>            <td>
+                  <code>ndarray, shape ``(Nt,)``</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Time stamps spaced by <code>model.dt</code>.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>dynamodels/integrator.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">394</span>
+<span class="normal">395</span>
+<span class="normal">396</span>
+<span class="normal">397</span>
+<span class="normal">398</span>
+<span class="normal">399</span>
+<span class="normal">400</span>
+<span class="normal">401</span>
+<span class="normal">402</span>
+<span class="normal">403</span>
+<span class="normal">404</span>
+<span class="normal">405</span>
+<span class="normal">406</span>
+<span class="normal">407</span>
+<span class="normal">408</span>
+<span class="normal">409</span>
+<span class="normal">410</span>
+<span class="normal">411</span>
+<span class="normal">412</span>
+<span class="normal">413</span>
+<span class="normal">414</span>
+<span class="normal">415</span>
+<span class="normal">416</span>
+<span class="normal">417</span>
+<span class="normal">418</span>
+<span class="normal">419</span>
+<span class="normal">420</span>
+<span class="normal">421</span>
+<span class="normal">422</span>
+<span class="normal">423</span>
+<span class="normal">424</span>
+<span class="normal">425</span>
+<span class="normal">426</span>
+<span class="normal">427</span>
+<span class="normal">428</span>
+<span class="normal">429</span>
+<span class="normal">430</span>
+<span class="normal">431</span>
+<span class="normal">432</span>
+<span class="normal">433</span>
+<span class="normal">434</span>
+<span class="normal">435</span>
+<span class="normal">436</span>
+<span class="normal">437</span>
+<span class="normal">438</span>
+<span class="normal">439</span>
+<span class="normal">440</span>
+<span class="normal">441</span>
+<span class="normal">442</span>
+<span class="normal">443</span>
+<span class="normal">444</span>
+<span class="normal">445</span>
+<span class="normal">446</span>
+<span class="normal">447</span>
+<span class="normal">448</span>
+<span class="normal">449</span>
+<span class="normal">450</span>
+<span class="normal">451</span>
+<span class="normal">452</span>
+<span class="normal">453</span>
+<span class="normal">454</span>
+<span class="normal">455</span>
+<span class="normal">456</span>
+<span class="normal">457</span>
+<span class="normal">458</span>
+<span class="normal">459</span>
+<span class="normal">460</span>
+<span class="normal">461</span>
+<span class="normal">462</span>
+<span class="normal">463</span>
+<span class="normal">464</span>
+<span class="normal">465</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">advance_ensemble</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Nt</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">averaged</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""Solve the IVP for every ensemble member.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    Nt : int</span>
+<span class="sd">        Number of forecast steps.</span>
+<span class="sd">    averaged : bool</span>
+<span class="sd">        If False (default), each member is solved independently and in</span>
+<span class="sd">        parallel (via a multiprocessing pool), each with its own</span>
+<span class="sd">        parameters from `model.get_alpha`. If True, the IVP is solved</span>
+<span class="sd">        once for the ensemble *mean* $\overline{\psi}_0$, and each</span>
+<span class="sd">        member's forecast is reconstructed as</span>
+<span class="sd">        $\overline{\psi}(t) + (\psi_{0,i}-\overline{\psi}_0)$, i.e. its</span>
+<span class="sd">        initial deviation from the mean is carried forward unchanged</span>
+<span class="sd">        rather than being independently propagated.</span>
+<span class="sd">    alpha : dict, optional</span>
+<span class="sd">        Accepted for interface compatibility but not used: parameters are</span>
+<span class="sd">        always taken from `model.get_alpha` (or `model.get_alpha` on the</span>
+<span class="sd">        ensemble mean, if `averaged`).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    psi : ndarray, shape ``(Nt, N, m)``</span>
+<span class="sd">        Forecasted ensemble state, excluding the initial condition.</span>
+<span class="sd">    t : ndarray, shape ``(Nt,)``</span>
+<span class="sd">        Time stamps spaced by `model.dt`.</span>
+<span class="sd">    """</span>
+    <span class="n">pm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span>
+
+    <span class="n">t_all</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">pm</span><span class="o">.</span><span class="n">current_time</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">Nt</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">pm</span><span class="o">.</span><span class="n">dt</span><span class="p">,</span> <span class="n">pm</span><span class="o">.</span><span class="n">precision_t</span><span class="p">)</span>
+
+    <span class="n">psi0</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">current_state</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">governing_eqns_params</span>
+
+    <span class="c1"># --- IVP Logic (Similar to previous Model.time_integrate) ---</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">averaged</span><span class="p">:</span>
+        <span class="c1"># Ensemble run (using multiprocessing pool)</span>
+        <span class="n">alpha_list</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">get_alpha</span><span class="p">()</span>
+        <span class="n">forecast_part</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">ivp_forecast_helper</span><span class="p">,</span>
+                                <span class="n">fun</span><span class="o">=</span><span class="n">pm</span><span class="o">.</span><span class="n">time_derivative</span><span class="p">,</span> <span class="n">t</span><span class="o">=</span><span class="n">t_all</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">method</span><span class="p">)</span>
+
+        <span class="n">sol</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">__pool</span><span class="o">.</span><span class="n">apply_async</span><span class="p">(</span><span class="n">forecast_part</span><span class="p">,</span>
+                                        <span class="n">kwds</span><span class="o">=</span><span class="p">{</span><span class="s1">'y0'</span><span class="p">:</span> <span class="n">psi0</span><span class="p">[:,</span> <span class="n">mi</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="s1">'params'</span><span class="p">:</span> <span class="p">{</span><span class="o">**</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">alpha_list</span><span class="p">[</span><span class="n">mi</span><span class="p">]}})</span>
+                <span class="k">for</span> <span class="n">mi</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">pm</span><span class="o">.</span><span class="n">m</span><span class="p">)]</span>
+
+        <span class="n">psi</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">()</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sol</span><span class="p">]</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Averaged forecast</span>
+        <span class="n">psi_mean0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">psi0</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">psi_deviation</span> <span class="o">=</span> <span class="n">psi0</span> <span class="o">-</span> <span class="n">psi_mean0</span>
+        <span class="n">alpha</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">get_alpha</span><span class="p">(</span><span class="n">psi_mean0</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="n">psi_mean</span> <span class="o">=</span> <span class="n">ivp_forecast_helper</span><span class="p">(</span><span class="n">y0</span><span class="o">=</span><span class="n">psi_mean0</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span>
+                                        <span class="n">fun</span><span class="o">=</span><span class="n">pm</span><span class="o">.</span><span class="n">time_derivative</span><span class="p">,</span>
+                                        <span class="n">t</span><span class="o">=</span><span class="n">t_all</span><span class="p">,</span>
+                                        <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="o">**</span><span class="n">alpha</span><span class="p">,</span> <span class="o">**</span><span class="n">args</span><span class="p">},</span>
+                                        <span class="n">method</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">method</span><span class="p">)</span>
+
+        <span class="n">psi</span> <span class="o">=</span> <span class="p">[</span><span class="n">psi_mean</span> <span class="o">+</span> <span class="n">psi_deviation</span><span class="p">[:,</span> <span class="n">ii</span><span class="p">]</span> <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">pm</span><span class="o">.</span><span class="n">m</span><span class="p">)]</span>
+
+
+    <span class="c1"># Rearrange dimensions to be Nt+1 x N x m and remove initial condition</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">psi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">psi</span><span class="p">)</span><span class="o">.</span><span class="n">transpose</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Error during final array construction: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="n">psi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">psi</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">psi0</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">pm</span><span class="o">.</span><span class="n">m</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">psi</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">t_all</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="dynamodels.integrator.DiscreteIntegrator" class="doc doc-heading">
+            <code>dynamodels.integrator.DiscreteIntegrator</code>
+
+
+</h2>
+
+
+    <div class="doc doc-contents first">
+            <p class="doc doc-class-bases">
+              Bases: <code><a class="autorefs autorefs-internal" title="dynamodels.integrator.Integrator" href="#dynamodels.integrator.Integrator">Integrator</a></code></p>
+
+
+
+        <p>Integrator for models advanced by a fixed, discrete map or scheme
+(single member), <span class="arithmatex">\(\psi_{t+\mathrm{d}t}=F(\psi_t,\alpha)\)</span> (e.g. ETDRK4 in
+<code>KS</code>, or an ESN).</p>
+<p>The model must define <code>time_step(Nt)</code>, stepping at its own internal
+time step <code>dt_step</code> (<code>dt_integrator</code>); if this differs from the model's
+output step <code>dt</code> (<code>dt_output</code>), the integrator's output is linearly
+interpolated back onto the requested output times.</p>
+
+
+<p><span class="doc-section-title">Attributes:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td><code><span title="dynamodels.integrator.DiscreteIntegrator.dt_output">dt_output</span></code></td>
+            <td>
+                  <code><span title="float">float</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Output time step, <code>model.dt</code>.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="dynamodels.integrator.DiscreteIntegrator.dt_integrator">dt_integrator</span></code></td>
+            <td>
+                  <code><span title="float">float</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Time step used internally by <code>model.time_step</code>, <code>model.dt_step</code>.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="dynamodels.integrator.DiscreteIntegrator.relation_integrator_output">relation_integrator_output</span></code></td>
+            <td>
+                  <code><span title="float">float</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p><code>dt_output / dt_integrator</code> (1.0 if the two coincide); the number
+of internal steps per output step.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+
+
+
+
+
+
+              <details class="mkdocstrings-source">
+                <summary>Source code in <code>dynamodels/integrator.py</code></summary>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">191</span>
+<span class="normal">192</span>
+<span class="normal">193</span>
+<span class="normal">194</span>
+<span class="normal">195</span>
+<span class="normal">196</span>
+<span class="normal">197</span>
+<span class="normal">198</span>
+<span class="normal">199</span>
+<span class="normal">200</span>
+<span class="normal">201</span>
+<span class="normal">202</span>
+<span class="normal">203</span>
+<span class="normal">204</span>
+<span class="normal">205</span>
+<span class="normal">206</span>
+<span class="normal">207</span>
+<span class="normal">208</span>
+<span class="normal">209</span>
+<span class="normal">210</span>
+<span class="normal">211</span>
+<span class="normal">212</span>
+<span class="normal">213</span>
+<span class="normal">214</span>
+<span class="normal">215</span>
+<span class="normal">216</span>
+<span class="normal">217</span>
+<span class="normal">218</span>
+<span class="normal">219</span>
+<span class="normal">220</span>
+<span class="normal">221</span>
+<span class="normal">222</span>
+<span class="normal">223</span>
+<span class="normal">224</span>
+<span class="normal">225</span>
+<span class="normal">226</span>
+<span class="normal">227</span>
+<span class="normal">228</span>
+<span class="normal">229</span>
+<span class="normal">230</span>
+<span class="normal">231</span>
+<span class="normal">232</span>
+<span class="normal">233</span>
+<span class="normal">234</span>
+<span class="normal">235</span>
+<span class="normal">236</span>
+<span class="normal">237</span>
+<span class="normal">238</span>
+<span class="normal">239</span>
+<span class="normal">240</span>
+<span class="normal">241</span>
+<span class="normal">242</span>
+<span class="normal">243</span>
+<span class="normal">244</span>
+<span class="normal">245</span>
+<span class="normal">246</span>
+<span class="normal">247</span>
+<span class="normal">248</span>
+<span class="normal">249</span>
+<span class="normal">250</span>
+<span class="normal">251</span>
+<span class="normal">252</span>
+<span class="normal">253</span>
+<span class="normal">254</span>
+<span class="normal">255</span>
+<span class="normal">256</span>
+<span class="normal">257</span>
+<span class="normal">258</span>
+<span class="normal">259</span>
+<span class="normal">260</span>
+<span class="normal">261</span>
+<span class="normal">262</span>
+<span class="normal">263</span>
+<span class="normal">264</span>
+<span class="normal">265</span>
+<span class="normal">266</span>
+<span class="normal">267</span>
+<span class="normal">268</span>
+<span class="normal">269</span>
+<span class="normal">270</span>
+<span class="normal">271</span>
+<span class="normal">272</span>
+<span class="normal">273</span>
+<span class="normal">274</span>
+<span class="normal">275</span>
+<span class="normal">276</span>
+<span class="normal">277</span>
+<span class="normal">278</span>
+<span class="normal">279</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">DiscreteIntegrator</span><span class="p">(</span><span class="n">Integrator</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""Integrator for models advanced by a fixed, discrete map or scheme</span>
+<span class="sd">    (single member), $\psi_{t+\mathrm{d}t}=F(\psi_t,\alpha)$ (e.g. ETDRK4 in</span>
+<span class="sd">    `KS`, or an ESN).</span>
+
+<span class="sd">    The model must define ``time_step(Nt)``, stepping at its own internal</span>
+<span class="sd">    time step `dt_step` (`dt_integrator`); if this differs from the model's</span>
+<span class="sd">    output step `dt` (`dt_output`), the integrator's output is linearly</span>
+<span class="sd">    interpolated back onto the requested output times.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    dt_output : float</span>
+<span class="sd">        Output time step, `model.dt`.</span>
+<span class="sd">    dt_integrator : float</span>
+<span class="sd">        Time step used internally by `model.time_step`, `model.dt_step`.</span>
+<span class="sd">    relation_integrator_output : float</span>
+<span class="sd">        ``dt_output / dt_integrator`` (1.0 if the two coincide); the number</span>
+<span class="sd">        of internal steps per output step.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_instance</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""See `Integrator.__init__`; also derives `dt_output`,</span>
+<span class="sd">        `dt_integrator`, and `relation_integrator_output` from the model.</span>
+<span class="sd">        """</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">model_instance</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">dt_output</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="s1">'dt'</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dt_integrator</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="s1">'dt_step'</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dt_output</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dt_integrator</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">relation_integrator_output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dt_output</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">dt_integrator</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">relation_integrator_output</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">relation_integrator_output</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">precision_t</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">relation_integrator_output</span> <span class="o">=</span> <span class="mf">1.0</span>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">advance_single</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Nt</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Advance the model via `model.time_step`, resampled onto the</span>
+<span class="sd">        requested output times.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        Nt : int</span>
+<span class="sd">            Number of *output* forecast steps (at spacing `dt_output`).</span>
+<span class="sd">        **kwargs</span>
+<span class="sd">            Accepted for interface compatibility with `advance_ensemble`</span>
+<span class="sd">            (e.g. `averaged`, `alpha`) but not used here.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        psi : ndarray, shape ``(Nt, N, m)``</span>
+<span class="sd">            Forecasted state at the output times, excluding the initial</span>
+<span class="sd">            condition. Taken directly from `model.time_step` if its internal</span>
+<span class="sd">            time grid already coincides with the output grid; otherwise</span>
+<span class="sd">            linearly interpolated onto it (never extrapolated beyond the</span>
+<span class="sd">            integrator's own time range).</span>
+<span class="sd">        t : ndarray, shape ``(Nt,)``</span>
+<span class="sd">            Output time stamps, spaced by `dt_output`.</span>
+<span class="sd">        """</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span>
+
+        <span class="n">t_out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">current_time</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">Nt</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">dt_output</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">precision_t</span><span class="p">)</span>
+
+        <span class="n">Nt_step</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">Nt</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">relation_integrator_output</span><span class="p">))</span>
+
+        <span class="n">psi</span><span class="p">,</span> <span class="n">t</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">time_step</span><span class="p">(</span><span class="n">Nt</span><span class="o">=</span><span class="n">Nt_step</span><span class="p">)</span>
+
+        <span class="c1"># Equal lengths do not imply equal times: with dt_output != dt_integrator a short</span>
+        <span class="c1"># request (e.g. Nt=1 at upsample=2 -&gt; Nt_step=1) gives two arrays of the same</span>
+        <span class="c1"># length spanning different intervals, and returning the integrator's own times</span>
+        <span class="c1"># would overshoot t_out[-1]. Only skip the interpolation when the two grids</span>
+        <span class="c1"># genuinely coincide.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">relation_integrator_output</span> <span class="o">==</span> <span class="mf">1.0</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">t_out</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">t</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">psi</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">t</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Interpolate</span>
+            <span class="k">assert</span> <span class="n">t</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">t_out</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="sa">f</span><span class="s2">"do not extrapolate beyond the integrator time range, </span><span class="si">{</span><span class="n">t</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2"> vs </span><span class="si">{</span><span class="n">t_out</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span>
+
+            <span class="n">psi_interp</span> <span class="o">=</span> <span class="n">interpolate</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">psi</span><span class="p">,</span> <span class="n">t_eval</span><span class="o">=</span><span class="n">t_out</span><span class="p">,</span> <span class="n">fill_values</span><span class="o">=</span><span class="s1">'extrapolate'</span><span class="p">)</span>
+            <span class="c1"># model.reset_last_state(psi_interp[-1], t_out[-1])</span>
+            <span class="k">return</span> <span class="n">psi_interp</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">t_out</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">advance_ensemble</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Nt</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span> <span class="n">averaged</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">alpha</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Identical to `advance_single`; `averaged` and `alpha` are</span>
+<span class="sd">        forwarded but unused (the discrete map is applied uniformly to</span>
+<span class="sd">        however many members `model.time_step` handles internally).</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">advance_single</span><span class="p">(</span><span class="n">Nt</span><span class="p">,</span> <span class="n">averaged</span><span class="o">=</span><span class="n">averaged</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+              </details>
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="dynamodels.integrator.DiscreteIntegrator.__init__" class="doc doc-heading">
+            <code class="highlight language-python"><span class="fm">__init__</span><span class="p">(</span><span class="n">model_instance</span><span class="p">)</span></code>
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>See <code>Integrator.__init__</code>; also derives <code>dt_output</code>,
+<code>dt_integrator</code>, and <code>relation_integrator_output</code> from the model.</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>dynamodels/integrator.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">212</span>
+<span class="normal">213</span>
+<span class="normal">214</span>
+<span class="normal">215</span>
+<span class="normal">216</span>
+<span class="normal">217</span>
+<span class="normal">218</span>
+<span class="normal">219</span>
+<span class="normal">220</span>
+<span class="normal">221</span>
+<span class="normal">222</span>
+<span class="normal">223</span>
+<span class="normal">224</span>
+<span class="normal">225</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_instance</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""See `Integrator.__init__`; also derives `dt_output`,</span>
+<span class="sd">    `dt_integrator`, and `relation_integrator_output` from the model.</span>
+<span class="sd">    """</span>
+    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">model_instance</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">dt_output</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="s1">'dt'</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">dt_integrator</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="s1">'dt_step'</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dt_output</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dt_integrator</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">relation_integrator_output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dt_output</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">dt_integrator</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">relation_integrator_output</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">relation_integrator_output</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">precision_t</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">relation_integrator_output</span> <span class="o">=</span> <span class="mf">1.0</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="dynamodels.integrator.DiscreteIntegrator.advance_single" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">advance_single</span><span class="p">(</span><span class="n">Nt</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Advance the model via <code>model.time_step</code>, resampled onto the
+requested output times.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>Nt</code>
+            </td>
+            <td>
+                  <code><span title="int">int</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Number of <em>output</em> forecast steps (at spacing <code>dt_output</code>).</p>
+              </div>
+            </td>
+            <td>
+                  <code>100</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>**kwargs</code>
+            </td>
+            <td>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Accepted for interface compatibility with <code>advance_ensemble</code>
+(e.g. <code>averaged</code>, <code>alpha</code>) but not used here.</p>
+              </div>
+            </td>
+            <td>
+                  <code>{}</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+<th>Name</th>          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+<td><code>psi</code></td>            <td>
+                  <code>ndarray, shape ``(Nt, N, m)``</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Forecasted state at the output times, excluding the initial
+condition. Taken directly from <code>model.time_step</code> if its internal
+time grid already coincides with the output grid; otherwise
+linearly interpolated onto it (never extrapolated beyond the
+integrator's own time range).</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+<td><code>t</code></td>            <td>
+                  <code>ndarray, shape ``(Nt,)``</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Output time stamps, spaced by <code>dt_output</code>.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>dynamodels/integrator.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">228</span>
+<span class="normal">229</span>
+<span class="normal">230</span>
+<span class="normal">231</span>
+<span class="normal">232</span>
+<span class="normal">233</span>
+<span class="normal">234</span>
+<span class="normal">235</span>
+<span class="normal">236</span>
+<span class="normal">237</span>
+<span class="normal">238</span>
+<span class="normal">239</span>
+<span class="normal">240</span>
+<span class="normal">241</span>
+<span class="normal">242</span>
+<span class="normal">243</span>
+<span class="normal">244</span>
+<span class="normal">245</span>
+<span class="normal">246</span>
+<span class="normal">247</span>
+<span class="normal">248</span>
+<span class="normal">249</span>
+<span class="normal">250</span>
+<span class="normal">251</span>
+<span class="normal">252</span>
+<span class="normal">253</span>
+<span class="normal">254</span>
+<span class="normal">255</span>
+<span class="normal">256</span>
+<span class="normal">257</span>
+<span class="normal">258</span>
+<span class="normal">259</span>
+<span class="normal">260</span>
+<span class="normal">261</span>
+<span class="normal">262</span>
+<span class="normal">263</span>
+<span class="normal">264</span>
+<span class="normal">265</span>
+<span class="normal">266</span>
+<span class="normal">267</span>
+<span class="normal">268</span>
+<span class="normal">269</span>
+<span class="normal">270</span>
+<span class="normal">271</span>
+<span class="normal">272</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">advance_single</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Nt</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Advance the model via `model.time_step`, resampled onto the</span>
+<span class="sd">    requested output times.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    Nt : int</span>
+<span class="sd">        Number of *output* forecast steps (at spacing `dt_output`).</span>
+<span class="sd">    **kwargs</span>
+<span class="sd">        Accepted for interface compatibility with `advance_ensemble`</span>
+<span class="sd">        (e.g. `averaged`, `alpha`) but not used here.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    psi : ndarray, shape ``(Nt, N, m)``</span>
+<span class="sd">        Forecasted state at the output times, excluding the initial</span>
+<span class="sd">        condition. Taken directly from `model.time_step` if its internal</span>
+<span class="sd">        time grid already coincides with the output grid; otherwise</span>
+<span class="sd">        linearly interpolated onto it (never extrapolated beyond the</span>
+<span class="sd">        integrator's own time range).</span>
+<span class="sd">    t : ndarray, shape ``(Nt,)``</span>
+<span class="sd">        Output time stamps, spaced by `dt_output`.</span>
+<span class="sd">    """</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span>
+
+    <span class="n">t_out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">current_time</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">Nt</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">dt_output</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">precision_t</span><span class="p">)</span>
+
+    <span class="n">Nt_step</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">Nt</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">relation_integrator_output</span><span class="p">))</span>
+
+    <span class="n">psi</span><span class="p">,</span> <span class="n">t</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">time_step</span><span class="p">(</span><span class="n">Nt</span><span class="o">=</span><span class="n">Nt_step</span><span class="p">)</span>
+
+    <span class="c1"># Equal lengths do not imply equal times: with dt_output != dt_integrator a short</span>
+    <span class="c1"># request (e.g. Nt=1 at upsample=2 -&gt; Nt_step=1) gives two arrays of the same</span>
+    <span class="c1"># length spanning different intervals, and returning the integrator's own times</span>
+    <span class="c1"># would overshoot t_out[-1]. Only skip the interpolation when the two grids</span>
+    <span class="c1"># genuinely coincide.</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">relation_integrator_output</span> <span class="o">==</span> <span class="mf">1.0</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">t_out</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">t</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">psi</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">t</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Interpolate</span>
+        <span class="k">assert</span> <span class="n">t</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">t_out</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="sa">f</span><span class="s2">"do not extrapolate beyond the integrator time range, </span><span class="si">{</span><span class="n">t</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2"> vs </span><span class="si">{</span><span class="n">t_out</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span>
+
+        <span class="n">psi_interp</span> <span class="o">=</span> <span class="n">interpolate</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">psi</span><span class="p">,</span> <span class="n">t_eval</span><span class="o">=</span><span class="n">t_out</span><span class="p">,</span> <span class="n">fill_values</span><span class="o">=</span><span class="s1">'extrapolate'</span><span class="p">)</span>
+        <span class="c1"># model.reset_last_state(psi_interp[-1], t_out[-1])</span>
+        <span class="k">return</span> <span class="n">psi_interp</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">t_out</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="dynamodels.integrator.DiscreteIntegrator.advance_ensemble" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">advance_ensemble</span><span class="p">(</span><span class="n">Nt</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">averaged</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Identical to <code>advance_single</code>; <code>averaged</code> and <code>alpha</code> are
+forwarded but unused (the discrete map is applied uniformly to
+however many members <code>model.time_step</code> handles internally).</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>dynamodels/integrator.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">274</span>
+<span class="normal">275</span>
+<span class="normal">276</span>
+<span class="normal">277</span>
+<span class="normal">278</span>
+<span class="normal">279</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">advance_ensemble</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Nt</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span> <span class="n">averaged</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">alpha</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Identical to `advance_single`; `averaged` and `alpha` are</span>
+<span class="sd">    forwarded but unused (the discrete map is applied uniformly to</span>
+<span class="sd">    however many members `model.time_step` handles internally).</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">advance_single</span><span class="p">(</span><span class="n">Nt</span><span class="p">,</span> <span class="n">averaged</span><span class="o">=</span><span class="n">averaged</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="dynamodels.integrator.ConstantIntegrator" class="doc doc-heading">
+            <code>dynamodels.integrator.ConstantIntegrator</code>
+
+
+</h2>
+
+
+    <div class="doc doc-contents first">
+            <p class="doc doc-class-bases">
+              Bases: <code><a class="autorefs autorefs-internal" title="dynamodels.integrator.Integrator" href="#dynamodels.integrator.Integrator">Integrator</a></code></p>
+
+
+
+        <p>Integrator that holds the state constant over time, <span class="arithmatex">\(\psi(t)=\psi(0)\)</span>.</p>
+<p>Useful for testing or as a placeholder while other model components (e.g.
+a bias model) are advanced.</p>
+
+
+
+
+
+
+
+
+              <details class="mkdocstrings-source">
+                <summary>Source code in <code>dynamodels/integrator.py</code></summary>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">143</span>
+<span class="normal">144</span>
+<span class="normal">145</span>
+<span class="normal">146</span>
+<span class="normal">147</span>
+<span class="normal">148</span>
+<span class="normal">149</span>
+<span class="normal">150</span>
+<span class="normal">151</span>
+<span class="normal">152</span>
+<span class="normal">153</span>
+<span class="normal">154</span>
+<span class="normal">155</span>
+<span class="normal">156</span>
+<span class="normal">157</span>
+<span class="normal">158</span>
+<span class="normal">159</span>
+<span class="normal">160</span>
+<span class="normal">161</span>
+<span class="normal">162</span>
+<span class="normal">163</span>
+<span class="normal">164</span>
+<span class="normal">165</span>
+<span class="normal">166</span>
+<span class="normal">167</span>
+<span class="normal">168</span>
+<span class="normal">169</span>
+<span class="normal">170</span>
+<span class="normal">171</span>
+<span class="normal">172</span>
+<span class="normal">173</span>
+<span class="normal">174</span>
+<span class="normal">175</span>
+<span class="normal">176</span>
+<span class="normal">177</span>
+<span class="normal">178</span>
+<span class="normal">179</span>
+<span class="normal">180</span>
+<span class="normal">181</span>
+<span class="normal">182</span>
+<span class="normal">183</span>
+<span class="normal">184</span>
+<span class="normal">185</span>
+<span class="normal">186</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">ConstantIntegrator</span><span class="p">(</span><span class="n">Integrator</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""Integrator that holds the state constant over time, $\psi(t)=\psi(0)$.</span>
+
+<span class="sd">    Useful for testing or as a placeholder while other model components (e.g.</span>
+<span class="sd">    a bias model) are advanced.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_instance</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""See `Integrator.__init__`."""</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">model_instance</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">advance_single</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Nt</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Repeat `model.current_state` at every output time.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        Nt : int</span>
+<span class="sd">            Number of forecast steps.</span>
+<span class="sd">        **kwargs</span>
+<span class="sd">            Accepted for interface compatibility with `advance_ensemble`</span>
+<span class="sd">            (e.g. `averaged`, `alpha`) but not used: the state is simply held</span>
+<span class="sd">            constant regardless of these.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        psi : ndarray, shape ``(Nt, N, m)``</span>
+<span class="sd">            `current_state` repeated `Nt` times, excluding the initial</span>
+<span class="sd">            condition.</span>
+<span class="sd">        t : ndarray, shape ``(Nt,)``</span>
+<span class="sd">            Time stamps spaced by `model.dt`.</span>
+<span class="sd">        """</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span>
+        <span class="n">t_out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">current_time</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">Nt</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">model</span><span class="o">.</span><span class="n">dt</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">precision_t</span><span class="p">)</span>
+        <span class="n">psi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">current_state</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">],</span> <span class="n">Nt</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="c1"># return psi, t_out, psi shoud have dimensions Nt x N x m</span>
+        <span class="n">psi</span> <span class="o">=</span> <span class="n">psi</span><span class="o">.</span><span class="n">transpose</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>  <span class="c1"># Nt+1 x N x m</span>
+
+        <span class="k">return</span> <span class="n">psi</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">t_out</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">advance_ensemble</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Nt</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span> <span class="n">averaged</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">alpha</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Identical to `advance_single` (the state is constant regardless of</span>
+<span class="sd">        ensemble size); `averaged` and `alpha` are forwarded but unused.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">advance_single</span><span class="p">(</span><span class="n">Nt</span><span class="o">=</span><span class="n">Nt</span><span class="p">,</span> <span class="n">averaged</span><span class="o">=</span><span class="n">averaged</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+              </details>
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="dynamodels.integrator.ConstantIntegrator.__init__" class="doc doc-heading">
+            <code class="highlight language-python"><span class="fm">__init__</span><span class="p">(</span><span class="n">model_instance</span><span class="p">)</span></code>
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>See <code>Integrator.__init__</code>.</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>dynamodels/integrator.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">150</span>
+<span class="normal">151</span>
+<span class="normal">152</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_instance</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""See `Integrator.__init__`."""</span>
+    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">model_instance</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="dynamodels.integrator.ConstantIntegrator.advance_single" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">advance_single</span><span class="p">(</span><span class="n">Nt</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Repeat <code>model.current_state</code> at every output time.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>Nt</code>
+            </td>
+            <td>
+                  <code><span title="int">int</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Number of forecast steps.</p>
+              </div>
+            </td>
+            <td>
+                  <code>100</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>**kwargs</code>
+            </td>
+            <td>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Accepted for interface compatibility with <code>advance_ensemble</code>
+(e.g. <code>averaged</code>, <code>alpha</code>) but not used: the state is simply held
+constant regardless of these.</p>
+              </div>
+            </td>
+            <td>
+                  <code>{}</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+<th>Name</th>          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+<td><code>psi</code></td>            <td>
+                  <code>ndarray, shape ``(Nt, N, m)``</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p><code>current_state</code> repeated <code>Nt</code> times, excluding the initial
+condition.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+<td><code>t</code></td>            <td>
+                  <code>ndarray, shape ``(Nt,)``</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Time stamps spaced by <code>model.dt</code>.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>dynamodels/integrator.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">154</span>
+<span class="normal">155</span>
+<span class="normal">156</span>
+<span class="normal">157</span>
+<span class="normal">158</span>
+<span class="normal">159</span>
+<span class="normal">160</span>
+<span class="normal">161</span>
+<span class="normal">162</span>
+<span class="normal">163</span>
+<span class="normal">164</span>
+<span class="normal">165</span>
+<span class="normal">166</span>
+<span class="normal">167</span>
+<span class="normal">168</span>
+<span class="normal">169</span>
+<span class="normal">170</span>
+<span class="normal">171</span>
+<span class="normal">172</span>
+<span class="normal">173</span>
+<span class="normal">174</span>
+<span class="normal">175</span>
+<span class="normal">176</span>
+<span class="normal">177</span>
+<span class="normal">178</span>
+<span class="normal">179</span>
+<span class="normal">180</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">advance_single</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Nt</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Repeat `model.current_state` at every output time.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    Nt : int</span>
+<span class="sd">        Number of forecast steps.</span>
+<span class="sd">    **kwargs</span>
+<span class="sd">        Accepted for interface compatibility with `advance_ensemble`</span>
+<span class="sd">        (e.g. `averaged`, `alpha`) but not used: the state is simply held</span>
+<span class="sd">        constant regardless of these.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    psi : ndarray, shape ``(Nt, N, m)``</span>
+<span class="sd">        `current_state` repeated `Nt` times, excluding the initial</span>
+<span class="sd">        condition.</span>
+<span class="sd">    t : ndarray, shape ``(Nt,)``</span>
+<span class="sd">        Time stamps spaced by `model.dt`.</span>
+<span class="sd">    """</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span>
+    <span class="n">t_out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">current_time</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">Nt</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">model</span><span class="o">.</span><span class="n">dt</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">precision_t</span><span class="p">)</span>
+    <span class="n">psi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">current_state</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">],</span> <span class="n">Nt</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="c1"># return psi, t_out, psi shoud have dimensions Nt x N x m</span>
+    <span class="n">psi</span> <span class="o">=</span> <span class="n">psi</span><span class="o">.</span><span class="n">transpose</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>  <span class="c1"># Nt+1 x N x m</span>
+
+    <span class="k">return</span> <span class="n">psi</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">t_out</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="dynamodels.integrator.ConstantIntegrator.advance_ensemble" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">advance_ensemble</span><span class="p">(</span><span class="n">Nt</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">averaged</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Identical to <code>advance_single</code> (the state is constant regardless of
+ensemble size); <code>averaged</code> and <code>alpha</code> are forwarded but unused.</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>dynamodels/integrator.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">182</span>
+<span class="normal">183</span>
+<span class="normal">184</span>
+<span class="normal">185</span>
+<span class="normal">186</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">advance_ensemble</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Nt</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span> <span class="n">averaged</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">alpha</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Identical to `advance_single` (the state is constant regardless of</span>
+<span class="sd">    ensemble size); `averaged` and `alpha` are forwarded but unused.</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">advance_single</span><span class="p">(</span><span class="n">Nt</span><span class="o">=</span><span class="n">Nt</span><span class="p">,</span> <span class="n">averaged</span><span class="o">=</span><span class="n">averaged</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../js/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>

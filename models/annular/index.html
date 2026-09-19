@@ -1,0 +1,1944 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Dynamical-system models with history tracking and pluggable time integrators">
+      
+      
+      
+        <link rel="canonical" href="https://andreanovoa.github.io/dynamodels/models/annular/">
+      
+      
+        <link rel="prev" href="../rijke/">
+      
+      
+        <link rel="next" href="../ks/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Annular combustor - dynamodels</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#annular-combustor" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="dynamodels" class="md-header__button md-logo" aria-label="dynamodels" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            dynamodels
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Annular combustor
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/andreanovoa/dynamodels" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    andreanovoa/dynamodels
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="dynamodels" class="md-nav__button md-logo" aria-label="dynamodels" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    dynamodels
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/andreanovoa/dynamodels" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    andreanovoa/dynamodels
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorials/tutorial_dynamodels.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Example usage
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Available Models
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Available Models
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../lorenz63/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lorenz63
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../lorenz96/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lorenz96
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../van_der_pol/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Van der Pol
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../rijke/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rijke tube
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Annular combustor
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Annular combustor
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#quickstart" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quickstart
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#regimes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Regimes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#nonlinear-diagnostics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Nonlinear diagnostics
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reference
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        API
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dynamodels.physical.annular.Annular" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Annular
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Annular">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dynamodels.physical.annular.Annular--references" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        References
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dynamodels.physical.annular.Annular.get_observables" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get_observables
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dynamodels.physical.annular.Annular.time_derivative" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        time_derivative
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Kuramoto-Sivashinsky (1-D)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ks2d/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Kuramoto-Sivashinsky (2-D)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../kuznetsov/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Kuznetsov oscillator
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/integrator/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Integrator
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/history/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HistoryTracker
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/utils/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    utils
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Learn more...
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Learn more...
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorials/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tutorials on thermoacoustics
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Characterizing a model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#quickstart" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quickstart
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#regimes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Regimes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#nonlinear-diagnostics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Nonlinear diagnostics
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reference
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        API
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dynamodels.physical.annular.Annular" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Annular
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Annular">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dynamodels.physical.annular.Annular--references" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        References
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dynamodels.physical.annular.Annular.get_observables" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get_observables
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dynamodels.physical.annular.Annular.time_derivative" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        time_derivative
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="annular-combustor">Annular combustor</h1>
+<p>The annular combustor model extends the single-mode picture of the
+<a href="../van_der_pol/">Van der Pol</a> and <a href="../rijke/">Rijke</a> models to the first
+azimuthal mode pair of an annular geometry, such as a gas-turbine combustion
+chamber. Decomposing the acoustic pressure as
+<span class="arithmatex">\(p(\theta,t) = \eta_a(t)\cos(\theta) + \eta_b(t)\sin(\theta)\)</span> gives four
+coupled first-order ODEs for <span class="arithmatex">\((\eta_a, \dot{\eta}_a, \eta_b, \dot{\eta}_b)\)</span>,
+with a growth rate <span class="arithmatex">\(\nu\)</span>, a resistive asymmetry <span class="arithmatex">\(c_2\beta\)</span>, a saturation
+<span class="arithmatex">\(\kappa\)</span>, and a reactive asymmetry <span class="arithmatex">\((\epsilon, \Theta_\epsilon)\)</span> that breaks
+the rotational symmetry of an idealized annulus. The full equations are in
+the <a href="#api">API reference</a> below.</p>
+<p>The balance between <span class="arithmatex">\(\nu\)</span> and <span class="arithmatex">\(c_2\beta\)</span> sets the qualitative regime. Three
+named cases are pre-tabulated in <code>CASES</code> and selected with <code>case='...'</code>
+(explicit keyword arguments override a case's values); the class defaults
+(<code>ER=0.5</code>) give <span class="arithmatex">\(\nu&lt;0\)</span>, a linearly stable mode that decays to the origin
+rather than self-oscillating, so pick a case (or set <code>nu</code>/<code>c2beta</code>
+explicitly) for a self-sustained oscillation.</p>
+<h2 id="quickstart">Quickstart</h2>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">dynamodels.physical</span><span class="w"> </span><span class="kn">import</span> <span class="n">Annular</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">Annular</span><span class="p">(</span><span class="n">case</span><span class="o">=</span><span class="s1">'mixed'</span><span class="p">,</span> <span class="n">dt</span><span class="o">=</span><span class="mf">1.</span><span class="o">/</span><span class="mi">51200</span><span class="p">)</span>
+<span class="n">psi</span><span class="p">,</span> <span class="n">t</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">time_integrate</span><span class="p">(</span><span class="n">Nt</span><span class="o">=</span><span class="mi">30000</span><span class="p">)</span>
+<span class="n">model</span><span class="o">.</span><span class="n">update_history</span><span class="p">(</span><span class="n">psi</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span>
+<span class="n">model</span><span class="o">.</span><span class="n">visualize_observable_hist</span><span class="p">()</span>
+<span class="n">model</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</code></pre></div>
+<p><code>Annular.nu_from_ER(ER)</code> and <code>Annular.c2beta_from_ER(ER)</code> map an equivalence
+ratio to <span class="arithmatex">\((\nu, c_2\beta)\)</span> along the calibrated experimental trend, in case
+neither a case nor explicit values fit.</p>
+<h2 id="regimes">Regimes</h2>
+<p><img alt="Annular combustor, spinning mode" src="../../img/annular_spinning.png" /></p>
+<p><em><code>case='spinning'</code>, <span class="arithmatex">\((\nu, c_2\beta) = (30, 5)\)</span>: growing onto a self-sustained
+oscillation. With <span class="arithmatex">\(c_2\beta\)</span> small relative to <span class="arithmatex">\(\nu\)</span>, the pattern rotates
+around the annulus rather than sitting still, so the four microphones' final
+amplitudes are closer to each other than in the standing case below (the
+small residual spread comes from the model's built-in reactive asymmetry,
+<span class="arithmatex">\(\epsilon\)</span>).</em></p>
+<p><img alt="Annular combustor, standing mode" src="../../img/annular_standing.png" /></p>
+<p><em><code>case='standing'</code>, <span class="arithmatex">\((\nu, c_2\beta) = (0, 50)\)</span>: a fixed node-antinode
+pattern rather than a rotating one. The <span class="arithmatex">\(\theta=120^\circ\)</span> microphone sits
+almost exactly on a node, with roughly an order of magnitude smaller
+amplitude than the other three.</em></p>
+<p><img alt="Annular combustor, mixed mode" src="../../img/annular_mixed.png" /></p>
+<p><em><code>case='mixed'</code>, <span class="arithmatex">\((\nu, c_2\beta) = (20, 18)\)</span>, past the transient. Left: the
+full run. Right: a few periods of the established oscillation. The
+<span class="arithmatex">\(\theta=120^\circ\)</span> microphone sits closer to a pressure node of this mode
+and saturates more slowly.</em></p>
+<p>A microphone trace alone does not show where the pressure pattern sits around
+the annulus, nor whether it rotates. An animation does:</p>
+<p><img alt="Annular combustor, mixed mode, animated" src="../../img/annular_mixed.gif" /></p>
+<p><em><code>case='mixed'</code>, past the transient. Left: the acoustic pressure
+<span class="arithmatex">\(p(\theta,t) = \eta_a\cos\theta + \eta_b\sin\theta\)</span> around the annulus, with
+<span class="arithmatex">\(\theta=0^\circ\)</span> at the top. Right: the same field sampled at the four
+microphones. The pattern neither stands still nor rotates steadily: it is the
+mixed state between the two limits above. The
+<a href="../../tutorials/">annular combustor tutorial</a> builds this figure step by step.</em></p>
+<h2 id="nonlinear-diagnostics">Nonlinear diagnostics</h2>
+<p><img alt="ntsa characterization of Annular" src="../../img/ntsa_characterize_annular.png" /></p>
+<p><em>Diagnostics from <a href="../../analysis/"><code>ntsa.characterize</code></a> on the mixed mode,
+left to right: the observable time series with a zoomed inset; power
+spectral density; the 3-D delay-embedded portrait; the first-return map of
+the maxima; a plane-crossing Poincare section; a recurrence plot; a 3-D
+classical-MDS embedding of the full state; and the leading Lyapunov exponent.</em></p>
+<h2 id="reference">Reference</h2>
+<p>Novoa, A., Noiray, N., Dawson, J. R., &amp; Magri, L. (2024). A real-time
+digital twin of azimuthal thermoacoustic instabilities. <em>Journal of Fluid
+Mechanics</em>, 1001, A49.
+<a href="https://doi.org/10.1017/jfm.2024.1052">doi:10.1017/jfm.2024.1052</a></p>
+<h2 id="api">API</h2>
+
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="dynamodels.physical.annular.Annular" class="doc doc-heading">
+            <code>dynamodels.physical.annular.Annular</code>
+
+
+</h2>
+
+
+    <div class="doc doc-contents first">
+            <p class="doc doc-class-bases">
+              Bases: <code><a class="autorefs autorefs-internal" title="dynamodels.model.Model" href="../../api/model/#dynamodels.model.Model">Model</a></code></p>
+
+
+
+        <p>Annular combustor — two coupled oscillators for the first azimuthal modes.</p>
+<p>The acoustic pressure in the annulus obeys the wave equation with heat-release
+source and resistive/reactive asymmetries,</p>
+<div class="arithmatex">\[
+\frac{\partial^2 p}{\partial t^2} + \zeta \frac{\partial p}{\partial t}
+- \left[ 1 + \epsilon \cos\!\big(2(\theta - \Theta_\epsilon)\big) \right]
+\frac{c^2}{r^2} \frac{\partial^2 p}{\partial \theta^2}
+= (\gamma - 1)\, \frac{\partial \dot{q}}{\partial t},
+\qquad
+(\gamma - 1)\, \dot{q} = \beta \left[ 1 + c_2
+\cos\!\big(2(\theta - \Theta_\beta)\big) \right] p - \kappa p^3 .
+\]</div>
+<p>Decomposing the pressure field onto the first azimuthal mode pair
+(<span class="arithmatex">\(n = 1\)</span>),</p>
+<div class="arithmatex">\[
+p(\theta, t) = \eta_a(t) \cos(n\theta) + \eta_b(t) \sin(n\theta),
+\]</div>
+<p>yields four coupled first-order ODEs for
+<span class="arithmatex">\((\eta_a, \dot{\eta}_a, \eta_b, \dot{\eta}_b)\)</span>:</p>
+<div class="arithmatex">\[
+\ddot{\eta}_a = -\omega^2 \left[ \eta_a \big(1 + \tfrac{\epsilon}{2}
+\cos 2\Theta_\epsilon\big) + \eta_b \tfrac{\epsilon}{2} \sin 2\Theta_\epsilon \right]
++ \dot{\eta}_a \left[ 2\nu + \tfrac{c_2\beta}{2} \cos 2\Theta_\beta
+- \tfrac{3\kappa}{4} (3\eta_a^2 + \eta_b^2) \right]
++ \dot{\eta}_b \left[ \tfrac{c_2\beta}{2} \sin 2\Theta_\beta
+- \tfrac{3\kappa}{2} \eta_a \eta_b \right],
+\]</div>
+<div class="arithmatex">\[
+\ddot{\eta}_b = -\omega^2 \left[ \eta_b \big(1 - \tfrac{\epsilon}{2}
+\cos 2\Theta_\epsilon\big) + \eta_a \tfrac{\epsilon}{2} \sin 2\Theta_\epsilon \right]
++ \dot{\eta}_b \left[ 2\nu - \tfrac{c_2\beta}{2} \cos 2\Theta_\beta
+- \tfrac{3\kappa}{4} (3\eta_b^2 + \eta_a^2) \right]
++ \dot{\eta}_a \left[ \tfrac{c_2\beta}{2} \sin 2\Theta_\beta
+- \tfrac{3\kappa}{2} \eta_a \eta_b \right].
+\]</div>
+<p>The estimable parameters are the growth rate <span class="arithmatex">\(\nu\)</span>, the resistive-asymmetry
+intensity <span class="arithmatex">\(c_2\beta\)</span>, the saturation <span class="arithmatex">\(\kappa\)</span>, the reactive-asymmetry amplitude
+<span class="arithmatex">\(\epsilon\)</span> and phase <span class="arithmatex">\(\Theta_\epsilon\)</span>, the frequency <span class="arithmatex">\(\omega\)</span> and the
+direction of maximum r.m.s. pressure <span class="arithmatex">\(\Theta_\beta\)</span>.</p>
+<p>Three named regimes are pre-tabulated in <code>CASES</code> and selected with
+<code>case='...'</code> (explicit keyword arguments override a case's values):</p>
+<ul>
+<li><code>'spinning'</code>: purely spinning mode, <span class="arithmatex">\((\nu, c_2\beta) = (30, 5)\)</span>;</li>
+<li><code>'standing'</code>: purely standing mode, <span class="arithmatex">\((\nu, c_2\beta) = (0, 50)\)</span>;</li>
+<li><code>'mixed'</code>: mixed mode, <span class="arithmatex">\((\nu, c_2\beta) = (20, 18)\)</span>.</li>
+</ul>
+<p>The class defaults (<code>ER=0.5</code>) give <span class="arithmatex">\(\nu&lt;0\)</span>, a linearly stable mode that
+decays to the origin rather than self-oscillating; use a <code>case</code> or set
+<code>nu</code>/<code>c2beta</code> explicitly for a self-sustained oscillation.</p>
+<h4 id="dynamodels.physical.annular.Annular--references">References</h4>
+<p>Nóvoa, Noiray, Dawson &amp; Magri (2024). A real-time digital twin of azimuthal
+thermoacoustic instabilities. <em>J. Fluid Mech.</em>, 1001, A49.
+<a href="https://doi.org/10.1017/jfm.2024.1052">DOI: 10.1017/jfm.2024.1052</a>.</p>
+
+
+
+
+
+
+
+
+              <details class="mkdocstrings-source">
+                <summary>Source code in <code>dynamodels/physical/annular.py</code></summary>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 17</span>
+<span class="normal"> 18</span>
+<span class="normal"> 19</span>
+<span class="normal"> 20</span>
+<span class="normal"> 21</span>
+<span class="normal"> 22</span>
+<span class="normal"> 23</span>
+<span class="normal"> 24</span>
+<span class="normal"> 25</span>
+<span class="normal"> 26</span>
+<span class="normal"> 27</span>
+<span class="normal"> 28</span>
+<span class="normal"> 29</span>
+<span class="normal"> 30</span>
+<span class="normal"> 31</span>
+<span class="normal"> 32</span>
+<span class="normal"> 33</span>
+<span class="normal"> 34</span>
+<span class="normal"> 35</span>
+<span class="normal"> 36</span>
+<span class="normal"> 37</span>
+<span class="normal"> 38</span>
+<span class="normal"> 39</span>
+<span class="normal"> 40</span>
+<span class="normal"> 41</span>
+<span class="normal"> 42</span>
+<span class="normal"> 43</span>
+<span class="normal"> 44</span>
+<span class="normal"> 45</span>
+<span class="normal"> 46</span>
+<span class="normal"> 47</span>
+<span class="normal"> 48</span>
+<span class="normal"> 49</span>
+<span class="normal"> 50</span>
+<span class="normal"> 51</span>
+<span class="normal"> 52</span>
+<span class="normal"> 53</span>
+<span class="normal"> 54</span>
+<span class="normal"> 55</span>
+<span class="normal"> 56</span>
+<span class="normal"> 57</span>
+<span class="normal"> 58</span>
+<span class="normal"> 59</span>
+<span class="normal"> 60</span>
+<span class="normal"> 61</span>
+<span class="normal"> 62</span>
+<span class="normal"> 63</span>
+<span class="normal"> 64</span>
+<span class="normal"> 65</span>
+<span class="normal"> 66</span>
+<span class="normal"> 67</span>
+<span class="normal"> 68</span>
+<span class="normal"> 69</span>
+<span class="normal"> 70</span>
+<span class="normal"> 71</span>
+<span class="normal"> 72</span>
+<span class="normal"> 73</span>
+<span class="normal"> 74</span>
+<span class="normal"> 75</span>
+<span class="normal"> 76</span>
+<span class="normal"> 77</span>
+<span class="normal"> 78</span>
+<span class="normal"> 79</span>
+<span class="normal"> 80</span>
+<span class="normal"> 81</span>
+<span class="normal"> 82</span>
+<span class="normal"> 83</span>
+<span class="normal"> 84</span>
+<span class="normal"> 85</span>
+<span class="normal"> 86</span>
+<span class="normal"> 87</span>
+<span class="normal"> 88</span>
+<span class="normal"> 89</span>
+<span class="normal"> 90</span>
+<span class="normal"> 91</span>
+<span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span>
+<span class="normal">108</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span>
+<span class="normal">112</span>
+<span class="normal">113</span>
+<span class="normal">114</span>
+<span class="normal">115</span>
+<span class="normal">116</span>
+<span class="normal">117</span>
+<span class="normal">118</span>
+<span class="normal">119</span>
+<span class="normal">120</span>
+<span class="normal">121</span>
+<span class="normal">122</span>
+<span class="normal">123</span>
+<span class="normal">124</span>
+<span class="normal">125</span>
+<span class="normal">126</span>
+<span class="normal">127</span>
+<span class="normal">128</span>
+<span class="normal">129</span>
+<span class="normal">130</span>
+<span class="normal">131</span>
+<span class="normal">132</span>
+<span class="normal">133</span>
+<span class="normal">134</span>
+<span class="normal">135</span>
+<span class="normal">136</span>
+<span class="normal">137</span>
+<span class="normal">138</span>
+<span class="normal">139</span>
+<span class="normal">140</span>
+<span class="normal">141</span>
+<span class="normal">142</span>
+<span class="normal">143</span>
+<span class="normal">144</span>
+<span class="normal">145</span>
+<span class="normal">146</span>
+<span class="normal">147</span>
+<span class="normal">148</span>
+<span class="normal">149</span>
+<span class="normal">150</span>
+<span class="normal">151</span>
+<span class="normal">152</span>
+<span class="normal">153</span>
+<span class="normal">154</span>
+<span class="normal">155</span>
+<span class="normal">156</span>
+<span class="normal">157</span>
+<span class="normal">158</span>
+<span class="normal">159</span>
+<span class="normal">160</span>
+<span class="normal">161</span>
+<span class="normal">162</span>
+<span class="normal">163</span>
+<span class="normal">164</span>
+<span class="normal">165</span>
+<span class="normal">166</span>
+<span class="normal">167</span>
+<span class="normal">168</span>
+<span class="normal">169</span>
+<span class="normal">170</span>
+<span class="normal">171</span>
+<span class="normal">172</span>
+<span class="normal">173</span>
+<span class="normal">174</span>
+<span class="normal">175</span>
+<span class="normal">176</span>
+<span class="normal">177</span>
+<span class="normal">178</span>
+<span class="normal">179</span>
+<span class="normal">180</span>
+<span class="normal">181</span>
+<span class="normal">182</span>
+<span class="normal">183</span>
+<span class="normal">184</span>
+<span class="normal">185</span>
+<span class="normal">186</span>
+<span class="normal">187</span>
+<span class="normal">188</span>
+<span class="normal">189</span>
+<span class="normal">190</span>
+<span class="normal">191</span>
+<span class="normal">192</span>
+<span class="normal">193</span>
+<span class="normal">194</span>
+<span class="normal">195</span>
+<span class="normal">196</span>
+<span class="normal">197</span>
+<span class="normal">198</span>
+<span class="normal">199</span>
+<span class="normal">200</span>
+<span class="normal">201</span>
+<span class="normal">202</span>
+<span class="normal">203</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">Annular</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""Annular combustor — two coupled oscillators for the first azimuthal modes.</span>
+
+<span class="sd">    The acoustic pressure in the annulus obeys the wave equation with heat-release</span>
+<span class="sd">    source and resistive/reactive asymmetries,</span>
+
+<span class="sd">    $$</span>
+<span class="sd">    \frac{\partial^2 p}{\partial t^2} + \zeta \frac{\partial p}{\partial t}</span>
+<span class="sd">    - \left[ 1 + \epsilon \cos\!\big(2(\theta - \Theta_\epsilon)\big) \right]</span>
+<span class="sd">    \frac{c^2}{r^2} \frac{\partial^2 p}{\partial \theta^2}</span>
+<span class="sd">    = (\gamma - 1)\, \frac{\partial \dot{q}}{\partial t},</span>
+<span class="sd">    \qquad</span>
+<span class="sd">    (\gamma - 1)\, \dot{q} = \beta \left[ 1 + c_2</span>
+<span class="sd">    \cos\!\big(2(\theta - \Theta_\beta)\big) \right] p - \kappa p^3 .</span>
+<span class="sd">    $$</span>
+
+<span class="sd">    Decomposing the pressure field onto the first azimuthal mode pair</span>
+<span class="sd">    ($n = 1$),</span>
+
+<span class="sd">    $$</span>
+<span class="sd">    p(\theta, t) = \eta_a(t) \cos(n\theta) + \eta_b(t) \sin(n\theta),</span>
+<span class="sd">    $$</span>
+
+<span class="sd">    yields four coupled first-order ODEs for</span>
+<span class="sd">    $(\eta_a, \dot{\eta}_a, \eta_b, \dot{\eta}_b)$:</span>
+
+<span class="sd">    $$</span>
+<span class="sd">    \ddot{\eta}_a = -\omega^2 \left[ \eta_a \big(1 + \tfrac{\epsilon}{2}</span>
+<span class="sd">    \cos 2\Theta_\epsilon\big) + \eta_b \tfrac{\epsilon}{2} \sin 2\Theta_\epsilon \right]</span>
+<span class="sd">    + \dot{\eta}_a \left[ 2\nu + \tfrac{c_2\beta}{2} \cos 2\Theta_\beta</span>
+<span class="sd">    - \tfrac{3\kappa}{4} (3\eta_a^2 + \eta_b^2) \right]</span>
+<span class="sd">    + \dot{\eta}_b \left[ \tfrac{c_2\beta}{2} \sin 2\Theta_\beta</span>
+<span class="sd">    - \tfrac{3\kappa}{2} \eta_a \eta_b \right],</span>
+<span class="sd">    $$</span>
+
+<span class="sd">    $$</span>
+<span class="sd">    \ddot{\eta}_b = -\omega^2 \left[ \eta_b \big(1 - \tfrac{\epsilon}{2}</span>
+<span class="sd">    \cos 2\Theta_\epsilon\big) + \eta_a \tfrac{\epsilon}{2} \sin 2\Theta_\epsilon \right]</span>
+<span class="sd">    + \dot{\eta}_b \left[ 2\nu - \tfrac{c_2\beta}{2} \cos 2\Theta_\beta</span>
+<span class="sd">    - \tfrac{3\kappa}{4} (3\eta_b^2 + \eta_a^2) \right]</span>
+<span class="sd">    + \dot{\eta}_a \left[ \tfrac{c_2\beta}{2} \sin 2\Theta_\beta</span>
+<span class="sd">    - \tfrac{3\kappa}{2} \eta_a \eta_b \right].</span>
+<span class="sd">    $$</span>
+
+<span class="sd">    The estimable parameters are the growth rate $\nu$, the resistive-asymmetry</span>
+<span class="sd">    intensity $c_2\beta$, the saturation $\kappa$, the reactive-asymmetry amplitude</span>
+<span class="sd">    $\epsilon$ and phase $\Theta_\epsilon$, the frequency $\omega$ and the</span>
+<span class="sd">    direction of maximum r.m.s. pressure $\Theta_\beta$.</span>
+
+<span class="sd">    Three named regimes are pre-tabulated in `CASES` and selected with</span>
+<span class="sd">    ``case='...'`` (explicit keyword arguments override a case's values):</span>
+
+<span class="sd">    - ``'spinning'``: purely spinning mode, $(\nu, c_2\beta) = (30, 5)$;</span>
+<span class="sd">    - ``'standing'``: purely standing mode, $(\nu, c_2\beta) = (0, 50)$;</span>
+<span class="sd">    - ``'mixed'``: mixed mode, $(\nu, c_2\beta) = (20, 18)$.</span>
+
+<span class="sd">    The class defaults (`ER=0.5`) give $\nu&lt;0$, a linearly stable mode that</span>
+<span class="sd">    decays to the origin rather than self-oscillating; use a `case` or set</span>
+<span class="sd">    `nu`/`c2beta` explicitly for a self-sustained oscillation.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    Nóvoa, Noiray, Dawson &amp; Magri (2024). A real-time digital twin of azimuthal</span>
+<span class="sd">    thermoacoustic instabilities. *J. Fluid Mech.*, 1001, A49.</span>
+<span class="sd">    [DOI: 10.1017/jfm.2024.1052](https://doi.org/10.1017/jfm.2024.1052).</span>
+<span class="sd">    """</span>
+
+    <span class="n">t_transient</span> <span class="o">=</span> <span class="mf">0.5</span>
+    <span class="n">t_CR</span> <span class="o">=</span> <span class="mf">0.01</span>
+
+    <span class="n">ER</span> <span class="o">=</span> <span class="mf">0.5</span>
+    <span class="n">nu_1</span><span class="p">,</span> <span class="n">nu_2</span> <span class="o">=</span> <span class="mf">633.77</span><span class="p">,</span> <span class="o">-</span><span class="mf">331.39</span>
+    <span class="n">c2b_1</span><span class="p">,</span> <span class="n">c2b_2</span> <span class="o">=</span> <span class="mf">258.3</span><span class="p">,</span> <span class="o">-</span><span class="mf">108.27</span>  <span class="c1"># values in Matlab codes</span>
+
+    <span class="n">Nq</span> <span class="o">=</span> <span class="mi">4</span>
+    <span class="n">theta_mic</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">60</span><span class="p">,</span> <span class="mi">120</span><span class="p">,</span> <span class="mi">240</span><span class="p">])</span>
+
+
+    <span class="n">theta_b</span> <span class="o">=</span> <span class="mf">0.63</span>
+    <span class="n">theta_e</span> <span class="o">=</span> <span class="mf">0.66</span>
+    <span class="n">omega</span> <span class="o">=</span> <span class="mi">1090</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span>
+    <span class="n">epsilon</span> <span class="o">=</span> <span class="mf">2.3E-3</span>
+
+    <span class="n">nu</span> <span class="o">=</span> <span class="n">nu_1</span> <span class="o">*</span> <span class="n">ER</span> <span class="o">+</span> <span class="n">nu_2</span>
+    <span class="n">c2beta</span> <span class="o">=</span> <span class="n">c2b_1</span> <span class="o">*</span> <span class="n">ER</span> <span class="o">+</span> <span class="n">c2b_2</span>
+    <span class="n">kappa</span> <span class="o">=</span> <span class="mf">1.2E-4</span>
+    <span class="n">params</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'omega'</span><span class="p">,</span> <span class="s1">'nu'</span><span class="p">,</span> <span class="s1">'c2beta'</span><span class="p">,</span> <span class="s1">'kappa'</span><span class="p">,</span> <span class="s1">'epsilon'</span><span class="p">,</span> <span class="s1">'theta_b'</span><span class="p">,</span> <span class="s1">'theta_e'</span><span class="p">]</span>
+
+    <span class="c1"># __________________________ Init method ___________________________ #</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">model_dict</span><span class="p">):</span>
+
+        <span class="n">case</span> <span class="o">=</span> <span class="n">model_dict</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">'case'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">case</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">case</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">CASES</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Unknown case '</span><span class="si">{</span><span class="n">case</span><span class="si">}</span><span class="s2">'. Must be one of </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">CASES</span><span class="p">)</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">CASES</span><span class="p">[</span><span class="n">case</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">model_dict</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span>  <span class="c1"># explicit kwargs win over the case</span>
+
+        <span class="n">dt</span> <span class="o">=</span> <span class="n">model_dict</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">'dt'</span><span class="p">,</span> <span class="mf">1.</span> <span class="o">/</span> <span class="mi">51200</span><span class="p">)</span>
+        <span class="n">psi0</span> <span class="o">=</span> <span class="n">model_dict</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">'psi0'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">psi0</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">C0</span><span class="p">,</span> <span class="n">X0</span><span class="p">,</span> <span class="n">th0</span><span class="p">,</span> <span class="n">ph0</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.63</span><span class="p">,</span> <span class="mi">0</span>  <span class="c1"># %initial values</span>
+            <span class="c1"># Conversion of the initial conditions from the quaternion formalism to the AB formalism</span>
+            <span class="n">Ai</span> <span class="o">=</span> <span class="n">C0</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">th0</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">X0</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">th0</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">X0</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+            <span class="n">Bi</span> <span class="o">=</span> <span class="n">C0</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">th0</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">X0</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">th0</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">X0</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+            <span class="n">phai</span> <span class="o">=</span> <span class="n">ph0</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">arctan2</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">th0</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">X0</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">th0</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">X0</span><span class="p">))</span>
+            <span class="n">phbi</span> <span class="o">=</span> <span class="n">ph0</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">arctan2</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">th0</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">X0</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">th0</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">X0</span><span class="p">))</span>
+
+            <span class="c1"># %initial conditions for the fast oscillator equations</span>
+            <span class="n">psi0</span> <span class="o">=</span> <span class="p">[</span><span class="n">Ai</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">phai</span><span class="p">),</span>
+                    <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">omega</span> <span class="o">*</span> <span class="n">Ai</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">phai</span><span class="p">),</span>
+                    <span class="n">Bi</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">phbi</span><span class="p">),</span>
+                    <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">omega</span> <span class="o">*</span> <span class="n">Bi</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">phbi</span><span class="p">)]</span>
+
+            <span class="n">psi0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">psi0</span><span class="p">)</span>  <span class="c1"># initialise \eta_a, \dot{\eta_a}, \eta_b, \dot{\eta_b}</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">psi0</span><span class="o">=</span><span class="n">psi0</span><span class="p">,</span> <span class="n">dt</span><span class="o">=</span><span class="n">dt</span><span class="p">,</span> <span class="n">integrator_class</span><span class="o">=</span><span class="n">IVPIntegrator</span><span class="p">,</span> <span class="o">**</span><span class="n">model_dict</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">alpha_labels</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">omega</span><span class="o">=</span><span class="s1">'$</span><span class="se">\\</span><span class="s1">omega$'</span><span class="p">,</span> <span class="n">nu</span><span class="o">=</span><span class="s1">'$</span><span class="se">\\</span><span class="s1">nu$'</span><span class="p">,</span> <span class="n">c2beta</span><span class="o">=</span><span class="s1">'$c_2</span><span class="se">\\</span><span class="s1">beta $'</span><span class="p">,</span> <span class="n">kappa</span><span class="o">=</span><span class="s1">'$</span><span class="se">\\</span><span class="s1">kappa$'</span><span class="p">,</span>
+                                 <span class="n">epsilon</span><span class="o">=</span><span class="s1">'$</span><span class="se">\\</span><span class="s1">epsilon$'</span><span class="p">,</span> <span class="n">theta_b</span><span class="o">=</span><span class="s1">'$</span><span class="se">\\</span><span class="s1">Theta_</span><span class="se">\\</span><span class="s1">beta$'</span><span class="p">,</span> <span class="n">theta_e</span><span class="o">=</span><span class="s1">'$</span><span class="se">\\</span><span class="s1">Theta_</span><span class="se">\\</span><span class="s1">epsilon$'</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">alpha_lims</span> <span class="o">=</span>  <span class="nb">dict</span><span class="p">(</span><span class="n">omega</span><span class="o">=</span><span class="p">(</span><span class="mi">1000</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="mi">1300</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">),</span>
+                                <span class="n">nu</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mf">60.</span><span class="p">,</span> <span class="mf">100.</span><span class="p">),</span> <span class="n">c2beta</span><span class="o">=</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">100.</span><span class="p">),</span>
+                                <span class="n">theta_b</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">),</span> <span class="n">theta_e</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">))</span>
+
+    <span class="c1"># _______________  Specific properties and methods ________________ #</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">obs_labels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">measure_modes</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">measure_modes</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="s2">"$</span><span class="se">\\</span><span class="s2">eta_1$"</span><span class="p">,</span> <span class="s1">'$</span><span class="se">\\</span><span class="s1">eta_2$'</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">loc</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">loc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">theta_mic</span>
+            <span class="k">return</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"$p(</span><span class="se">\\</span><span class="s2">theta=</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">degrees</span><span class="p">(</span><span class="n">th</span><span class="p">)))</span><span class="si">}</span><span class="s2">^</span><span class="se">\\</span><span class="s2">circ)$"</span> <span class="k">for</span> <span class="n">th</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">loc</span><span class="p">)]</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">state_labels</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span>  <span class="p">[</span><span class="s1">'$</span><span class="se">\\</span><span class="s1">eta_</span><span class="si">{a}</span><span class="s1">$'</span><span class="p">,</span> <span class="s1">'$</span><span class="se">\\</span><span class="s1">dot{</span><span class="se">\\</span><span class="s1">eta}_</span><span class="si">{a}</span><span class="s1">$'</span><span class="p">,</span> <span class="s1">'$</span><span class="se">\\</span><span class="s1">eta_</span><span class="si">{b}</span><span class="s1">$'</span><span class="p">,</span> <span class="s1">'$</span><span class="se">\\</span><span class="s1">dot{</span><span class="se">\\</span><span class="s1">eta}_</span><span class="si">{b}</span><span class="s1">$'</span><span class="p">]</span>
+
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">nu_from_ER</span><span class="p">(</span><span class="n">ER</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Annular</span><span class="o">.</span><span class="n">nu_1</span> <span class="o">*</span> <span class="n">ER</span> <span class="o">+</span> <span class="n">Annular</span><span class="o">.</span><span class="n">nu_2</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">c2beta_from_ER</span><span class="p">(</span><span class="n">ER</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Annular</span><span class="o">.</span><span class="n">c2b_1</span> <span class="o">*</span> <span class="n">ER</span> <span class="o">+</span> <span class="n">Annular</span><span class="o">.</span><span class="n">c2b_2</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_observables</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Nt</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">measure_modes</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        pressure measurements at theta = [0º, 60º, 120º, 240º]</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="n">loc</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">loc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">theta_mic</span>
+
+        <span class="k">if</span> <span class="n">measure_modes</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">hist</span><span class="p">[</span><span class="o">-</span><span class="n">Nt</span><span class="p">:,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">:]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">eta1</span><span class="p">,</span> <span class="n">eta2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hist</span><span class="p">[</span><span class="o">-</span><span class="n">Nt</span><span class="p">:,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:],</span> <span class="bp">self</span><span class="o">.</span><span class="n">hist</span><span class="p">[</span><span class="o">-</span><span class="n">Nt</span><span class="p">:,</span> <span class="mi">2</span><span class="p">,</span> <span class="p">:]</span>
+            <span class="k">if</span> <span class="nb">max</span><span class="p">(</span><span class="n">loc</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">'Theta must be in radians'</span><span class="p">)</span>
+
+            <span class="n">p_mics</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">eta1</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">th</span><span class="p">)</span> <span class="o">+</span> <span class="n">eta2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">th</span><span class="p">)</span> <span class="k">for</span> <span class="n">th</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">loc</span><span class="p">)])</span>
+            <span class="n">p_mics</span> <span class="o">=</span> <span class="n">p_mics</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">Nt</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">p_mics</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">p_mics</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">time_derivative</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">psi</span><span class="p">,</span> <span class="n">nu</span><span class="p">,</span> <span class="n">kappa</span><span class="p">,</span> <span class="n">c2beta</span><span class="p">,</span> <span class="n">theta_b</span><span class="p">,</span> <span class="n">omega</span><span class="p">,</span> <span class="n">epsilon</span><span class="p">,</span> <span class="n">theta_e</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Time derivative of the two coupled azimuthal oscillators (see class docstring)."""</span>
+        <span class="n">y_a</span><span class="p">,</span> <span class="n">z_a</span><span class="p">,</span> <span class="n">y_b</span><span class="p">,</span> <span class="n">z_b</span> <span class="o">=</span> <span class="n">psi</span><span class="p">[:</span><span class="mi">4</span><span class="p">]</span>  <span class="c1"># y = η, and z = dη/dt</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">k1</span><span class="p">(</span><span class="n">y1</span><span class="p">,</span> <span class="n">y2</span><span class="p">,</span> <span class="n">sign</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">nu</span> <span class="o">-</span> <span class="mf">3.</span> <span class="o">/</span> <span class="mi">4</span> <span class="o">*</span> <span class="n">kappa</span> <span class="o">*</span> <span class="p">(</span><span class="mi">3</span> <span class="o">*</span> <span class="n">y1</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">y2</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">+</span>
+                    <span class="n">sign</span> <span class="o">*</span> <span class="n">c2beta</span> <span class="o">/</span> <span class="mf">2.</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="mf">2.</span> <span class="o">*</span> <span class="n">theta_b</span><span class="p">))</span>
+
+        <span class="n">k2</span> <span class="o">=</span> <span class="n">c2beta</span> <span class="o">/</span> <span class="mf">2.</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mf">2.</span> <span class="o">*</span> <span class="n">theta_b</span><span class="p">)</span> <span class="o">-</span> <span class="mf">3.</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">kappa</span> <span class="o">*</span> <span class="n">y_a</span> <span class="o">*</span> <span class="n">y_b</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">k3</span><span class="p">(</span><span class="n">y1</span><span class="p">,</span> <span class="n">y2</span><span class="p">,</span> <span class="n">sign</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">omega</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">y1</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">sign</span> <span class="o">*</span> <span class="n">epsilon</span> <span class="o">/</span> <span class="mf">2.</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="mf">2.</span> <span class="o">*</span> <span class="n">theta_e</span><span class="p">))</span> <span class="o">+</span>
+                                 <span class="n">y2</span> <span class="o">*</span> <span class="n">epsilon</span> <span class="o">/</span> <span class="mf">2.</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mf">2.</span> <span class="o">*</span> <span class="n">theta_e</span><span class="p">))</span>
+
+        <span class="n">dz_a</span> <span class="o">=</span> <span class="n">z_a</span> <span class="o">*</span> <span class="n">k1</span><span class="p">(</span><span class="n">y_a</span><span class="p">,</span> <span class="n">y_b</span><span class="p">,</span> <span class="n">sign</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">z_b</span> <span class="o">*</span> <span class="n">k2</span> <span class="o">-</span> <span class="n">k3</span><span class="p">(</span><span class="n">y_a</span><span class="p">,</span> <span class="n">y_b</span><span class="p">,</span> <span class="n">sign</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">dz_b</span> <span class="o">=</span> <span class="n">z_b</span> <span class="o">*</span> <span class="n">k1</span><span class="p">(</span><span class="n">y_b</span><span class="p">,</span> <span class="n">y_a</span><span class="p">,</span> <span class="n">sign</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">z_a</span> <span class="o">*</span> <span class="n">k2</span> <span class="o">-</span> <span class="n">k3</span><span class="p">(</span><span class="n">y_b</span><span class="p">,</span> <span class="n">y_a</span><span class="p">,</span> <span class="n">sign</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="n">z_a</span><span class="p">,</span> <span class="n">dz_a</span><span class="p">,</span> <span class="n">z_b</span><span class="p">,</span> <span class="n">dz_b</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="mi">0</span><span class="p">,)</span> <span class="o">*</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">psi</span><span class="p">)</span> <span class="o">-</span> <span class="mi">4</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+              </details>
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="dynamodels.physical.annular.Annular.get_observables" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">get_observables</span><span class="p">(</span><span class="n">Nt</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">measure_modes</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>pressure measurements at theta = [0º, 60º, 120º, 240º]</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>dynamodels/physical/annular.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">164</span>
+<span class="normal">165</span>
+<span class="normal">166</span>
+<span class="normal">167</span>
+<span class="normal">168</span>
+<span class="normal">169</span>
+<span class="normal">170</span>
+<span class="normal">171</span>
+<span class="normal">172</span>
+<span class="normal">173</span>
+<span class="normal">174</span>
+<span class="normal">175</span>
+<span class="normal">176</span>
+<span class="normal">177</span>
+<span class="normal">178</span>
+<span class="normal">179</span>
+<span class="normal">180</span>
+<span class="normal">181</span>
+<span class="normal">182</span>
+<span class="normal">183</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_observables</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Nt</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">measure_modes</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    pressure measurements at theta = [0º, 60º, 120º, 240º]</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">loc</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">loc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">theta_mic</span>
+
+    <span class="k">if</span> <span class="n">measure_modes</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">hist</span><span class="p">[</span><span class="o">-</span><span class="n">Nt</span><span class="p">:,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">:]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">eta1</span><span class="p">,</span> <span class="n">eta2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hist</span><span class="p">[</span><span class="o">-</span><span class="n">Nt</span><span class="p">:,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:],</span> <span class="bp">self</span><span class="o">.</span><span class="n">hist</span><span class="p">[</span><span class="o">-</span><span class="n">Nt</span><span class="p">:,</span> <span class="mi">2</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="k">if</span> <span class="nb">max</span><span class="p">(</span><span class="n">loc</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">'Theta must be in radians'</span><span class="p">)</span>
+
+        <span class="n">p_mics</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">eta1</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">th</span><span class="p">)</span> <span class="o">+</span> <span class="n">eta2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">th</span><span class="p">)</span> <span class="k">for</span> <span class="n">th</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">loc</span><span class="p">)])</span>
+        <span class="n">p_mics</span> <span class="o">=</span> <span class="n">p_mics</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">Nt</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">p_mics</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">p_mics</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="dynamodels.physical.annular.Annular.time_derivative" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">time_derivative</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">psi</span><span class="p">,</span> <span class="n">nu</span><span class="p">,</span> <span class="n">kappa</span><span class="p">,</span> <span class="n">c2beta</span><span class="p">,</span> <span class="n">theta_b</span><span class="p">,</span> <span class="n">omega</span><span class="p">,</span> <span class="n">epsilon</span><span class="p">,</span> <span class="n">theta_e</span><span class="p">)</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-staticmethod"><code>staticmethod</code></small>
+  </span>
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Time derivative of the two coupled azimuthal oscillators (see class docstring).</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>dynamodels/physical/annular.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">185</span>
+<span class="normal">186</span>
+<span class="normal">187</span>
+<span class="normal">188</span>
+<span class="normal">189</span>
+<span class="normal">190</span>
+<span class="normal">191</span>
+<span class="normal">192</span>
+<span class="normal">193</span>
+<span class="normal">194</span>
+<span class="normal">195</span>
+<span class="normal">196</span>
+<span class="normal">197</span>
+<span class="normal">198</span>
+<span class="normal">199</span>
+<span class="normal">200</span>
+<span class="normal">201</span>
+<span class="normal">202</span>
+<span class="normal">203</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@staticmethod</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">time_derivative</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">psi</span><span class="p">,</span> <span class="n">nu</span><span class="p">,</span> <span class="n">kappa</span><span class="p">,</span> <span class="n">c2beta</span><span class="p">,</span> <span class="n">theta_b</span><span class="p">,</span> <span class="n">omega</span><span class="p">,</span> <span class="n">epsilon</span><span class="p">,</span> <span class="n">theta_e</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Time derivative of the two coupled azimuthal oscillators (see class docstring)."""</span>
+    <span class="n">y_a</span><span class="p">,</span> <span class="n">z_a</span><span class="p">,</span> <span class="n">y_b</span><span class="p">,</span> <span class="n">z_b</span> <span class="o">=</span> <span class="n">psi</span><span class="p">[:</span><span class="mi">4</span><span class="p">]</span>  <span class="c1"># y = η, and z = dη/dt</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">k1</span><span class="p">(</span><span class="n">y1</span><span class="p">,</span> <span class="n">y2</span><span class="p">,</span> <span class="n">sign</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">nu</span> <span class="o">-</span> <span class="mf">3.</span> <span class="o">/</span> <span class="mi">4</span> <span class="o">*</span> <span class="n">kappa</span> <span class="o">*</span> <span class="p">(</span><span class="mi">3</span> <span class="o">*</span> <span class="n">y1</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">y2</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">+</span>
+                <span class="n">sign</span> <span class="o">*</span> <span class="n">c2beta</span> <span class="o">/</span> <span class="mf">2.</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="mf">2.</span> <span class="o">*</span> <span class="n">theta_b</span><span class="p">))</span>
+
+    <span class="n">k2</span> <span class="o">=</span> <span class="n">c2beta</span> <span class="o">/</span> <span class="mf">2.</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mf">2.</span> <span class="o">*</span> <span class="n">theta_b</span><span class="p">)</span> <span class="o">-</span> <span class="mf">3.</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">kappa</span> <span class="o">*</span> <span class="n">y_a</span> <span class="o">*</span> <span class="n">y_b</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">k3</span><span class="p">(</span><span class="n">y1</span><span class="p">,</span> <span class="n">y2</span><span class="p">,</span> <span class="n">sign</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">omega</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">y1</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">sign</span> <span class="o">*</span> <span class="n">epsilon</span> <span class="o">/</span> <span class="mf">2.</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="mf">2.</span> <span class="o">*</span> <span class="n">theta_e</span><span class="p">))</span> <span class="o">+</span>
+                             <span class="n">y2</span> <span class="o">*</span> <span class="n">epsilon</span> <span class="o">/</span> <span class="mf">2.</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mf">2.</span> <span class="o">*</span> <span class="n">theta_e</span><span class="p">))</span>
+
+    <span class="n">dz_a</span> <span class="o">=</span> <span class="n">z_a</span> <span class="o">*</span> <span class="n">k1</span><span class="p">(</span><span class="n">y_a</span><span class="p">,</span> <span class="n">y_b</span><span class="p">,</span> <span class="n">sign</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">z_b</span> <span class="o">*</span> <span class="n">k2</span> <span class="o">-</span> <span class="n">k3</span><span class="p">(</span><span class="n">y_a</span><span class="p">,</span> <span class="n">y_b</span><span class="p">,</span> <span class="n">sign</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">dz_b</span> <span class="o">=</span> <span class="n">z_b</span> <span class="o">*</span> <span class="n">k1</span><span class="p">(</span><span class="n">y_b</span><span class="p">,</span> <span class="n">y_a</span><span class="p">,</span> <span class="n">sign</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">z_a</span> <span class="o">*</span> <span class="n">k2</span> <span class="o">-</span> <span class="n">k3</span><span class="p">(</span><span class="n">y_b</span><span class="p">,</span> <span class="n">y_a</span><span class="p">,</span> <span class="n">sign</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="n">z_a</span><span class="p">,</span> <span class="n">dz_a</span><span class="p">,</span> <span class="n">z_b</span><span class="p">,</span> <span class="n">dz_b</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="mi">0</span><span class="p">,)</span> <span class="o">*</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">psi</span><span class="p">)</span> <span class="o">-</span> <span class="mi">4</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../js/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>
