@@ -4,9 +4,11 @@
 [![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.21843588-blue.svg)](https://doi.org/10.5281/zenodo.21843588)
 
 A `Model` couples a governing equation to a pre-allocated state history and a pluggable time integrator. Every physical model in the package — three low-order oscillators, two spatially extended PDEs, and the Lorenz systems — implements the same interface: 
+
 - `time_integrate(Nt)` advances the state,
 - `get_observable_hist()` returns what a sensor would measure, and
 - `visualize_history()` plots both. 
+
 The package itself depends only on numpy, scipy, matplotlib and typeguard.
 
 ![Lorenz63 attractor](img/Lorenz_ergodic.gif)
