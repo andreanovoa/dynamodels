@@ -2,7 +2,7 @@
 
 [![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.21843588-blue.svg)](https://doi.org/10.5281/zenodo.21843588)
 [![PyPI](https://img.shields.io/pypi/v/dynamodels)](https://pypi.org/project/dynamodels/)
-[![Docs](https://img.shields.io/badge/docs-mkdocs-blue.svg)](https://andreanovoa.github.io/dynamodels/)
+[![docs](https://github.com/andreanovoa/dynamodels/actions/workflows/docs.yml/badge.svg)](https://andreanovoa.github.io/dynamodels/)
 
 Dynamical-system models with pre-allocated history tracking and pluggable time
 integrators — the modelling core split out of
