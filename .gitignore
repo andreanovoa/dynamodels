@@ -9,3 +9,5 @@ figs/
 *.pkl
 site/
 docs/img/*.pdf
+# nbconvert output, rebuilt by the docs workflow
+docs/tutorials/

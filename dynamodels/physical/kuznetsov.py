@@ -33,7 +33,7 @@ class Kuznetsov(Model):
 
     Nq = 3
 
-    lam = 0.             # linear growth rate 
+    lam = 0.             # linear growth rate
     omega0 = 2 * np.pi   # natural frequency [rad/s]
     mu = 1.              # slow-variable drive
 

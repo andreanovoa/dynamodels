@@ -63,6 +63,7 @@ nav:
       - Kuramoto-Sivashinsky (2-D): models/ks2d.md
       - Kuznetsov oscillator: models/kuznetsov.md
   - Analysing a model: analysis.md
+  - Tutorials: tutorials.md
   - API reference:
       - Model: api/model.md
       - Integrator: api/integrator.md

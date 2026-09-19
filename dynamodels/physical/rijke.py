@@ -212,7 +212,7 @@ class Rijke(Model):
     def get_observables(self, Nt=1, loc=None, **kwargs):
         if loc is None:
             loc = self.x_mic
-        elif loc == "all":
+        elif isinstance(loc, str) and loc == "all":
             loc = np.linspace(0, self.L, 100)[:-1]
 
         loc = np.expand_dims(loc, axis=1)

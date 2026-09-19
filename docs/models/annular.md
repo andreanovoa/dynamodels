@@ -59,6 +59,18 @@ full run. Right: a few periods of the established oscillation. The
 $\theta=120^\circ$ microphone sits closer to a pressure node of this mode
 and saturates more slowly.*
 
+A microphone trace alone does not show where the pressure pattern sits around
+the annulus, nor whether it rotates. An animation does:
+
+![Annular combustor, mixed mode, animated](../img/annular_mixed.gif)
+
+*`case='mixed'`, past the transient. Left: the acoustic pressure
+$p(\theta,t) = \eta_a\cos\theta + \eta_b\sin\theta$ around the annulus, with
+$\theta=0^\circ$ at the top. Right: the same field sampled at the four
+microphones. The pattern neither stands still nor rotates steadily: it is the
+mixed state between the two limits above. The
+[annular combustor tutorial](../tutorials.md) builds this figure step by step.*
+
 ## Nonlinear diagnostics
 
 ![ntsa characterization of Annular](../img/ntsa_characterize_annular.png)
