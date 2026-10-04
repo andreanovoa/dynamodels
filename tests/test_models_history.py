@@ -83,3 +83,16 @@ class TestLorenz63:
         psi, t = model.time_integrate(Nt=500)
         assert np.isfinite(psi).all()
         assert psi.shape[1] == 3
+
+
+def test_dt_kept_exact():
+    """A step such as 1/51200 (a 51.2 kHz sampling rate) is not rounded short; common steps keep their precision."""
+    from dynamodels.physical import Annular
+    m = Annular(dt=1 / 51200)
+    assert m.dt == 1 / 51200
+    t = m.time_integrate(Nt=512)[1]
+    assert np.isclose(t[-1], 0.01, rtol=0, atol=1e-12)         # 512 steps from t = 0
+    m.close()
+    v = VdP(dt=1e-4)
+    assert v.dt == 1e-4 and v.precision_t == 6
+    v.close()

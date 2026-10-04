@@ -423,8 +423,8 @@ class Model:
 
     @dt.setter
     def dt(self, value):
-        """Set `dt`, deriving `precision_t` from it as
-        ``ceil(-log10(dt) + 2)``.
+        """Set `dt`, deriving `precision_t` from it as ``ceil(-log10(dt) + 2)``,
+        raised (up to 12) until `dt` is represented exactly.
 
         Raises
         ------
@@ -434,7 +434,10 @@ class Model:
         if value <= 0:
             raise ValueError("Time step must be positive.")
         self._precision_t = int(np.ceil(-np.log10(value) + 2))  # Set precision based on dt
-        # print(f'Setting time step dt={value} with precision_t={self._precision_t}')
+        # Keep the decimals that dt itself needs (1/51200 = 1.953125e-5 needs 11), up to 12; rounding to
+        # the 2 extra digits alone made such a step 0.16% short and the model drift from the data clock.
+        while self._precision_t < 12 and not np.isclose(round(value, self._precision_t), value, rtol=1e-12, atol=0):
+            self._precision_t += 1
         self._dt = np.round(value, self.precision_t)
 
     @property
