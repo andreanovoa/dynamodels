@@ -183,7 +183,7 @@ class HistoryTracker:
             t1 = t0 + state.shape[0]
 
             if t1 > self.capacity:
-                self._increase_hist_size(Nt=state.shape[0]*10)
+                self._increase_hist_size(Nt=max(state.shape[0], self.capacity))  # doubling: <= 2x overallocation
 
             self._hist[t0:t1] = state
             self._hist_t[t0:t1] = t

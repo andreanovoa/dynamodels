@@ -127,11 +127,8 @@ class Model:
         self.alpha = self.alpha0.copy()
 
         # ========================== CREATE HISTORY ========================== ##
-        # self._initial_capacity = int(self.t_transient / self.dt) # Initial capacity of history arrays
-        # self._current_ti = 1  # Current time index in history arrays
-
+        # Starts small and grows on demand: sized by t_transient, an ESN's buffer is its training record times m.
         self.history = HistoryTracker()
-        self.history._initial_capacity = int(self.t_transient / self.dt)*2 if self.t_transient > 0 else 1000
         self.update_history(psi=self.psi0[np.newaxis, :, :],
                             t=np.array([0.]),
                             reset=True)
