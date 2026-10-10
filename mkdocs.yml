@@ -1,4 +1,4 @@
-site_name: dynamodels
+site_name: "Nóvoa Lab · dynamodels"
 site_description: Dynamical-system models with history tracking and pluggable time integrators
 site_url: https://andreanovoa.github.io/dynamodels/
 repo_url: https://github.com/andreanovoa/dynamodels
