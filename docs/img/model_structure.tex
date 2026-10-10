@@ -1,17 +1,14 @@
-% Structure of the dynamodels Model class.
-% Build:  pdflatex dynamodels.tex && pdftocairo -svg dynamodels.pdf dynamodels.svg
-\documentclass[border=0pt]{standalone}
+% Structure of the dynamodels Model class, for the docs home page.
+% The background is left transparent: the page stylesheet inverts the figure in
+% the dark theme, and a baked-in white plate would invert to a black block.
+% Build:  pdflatex model_structure.tex && pdftocairo -svg model_structure.pdf model_structure.svg
+\documentclass[border=3pt]{standalone}
 \usepackage{tikz}
 \usepackage{bm}
 \usepackage[T1]{fontenc}
 \usepackage{helvet}
 \renewcommand{\familydefault}{\sfdefault}
 \usetikzlibrary{positioning,fit,backgrounds}
-
-% An extra layer below the panel, so the whole figure sits on solid white and
-% stays legible on a dark documentation theme.
-\pgfdeclarelayer{page}
-\pgfsetlayers{page,background,main}
 
 \definecolor{accent}{HTML}{3B6FD4}
 \definecolor{ink}{HTML}{16233C}
@@ -53,11 +50,6 @@
 
 \node[below=1.6mm of model, text=muted, font=\ttfamily\tiny] (api)
   {time\_integrate(Nt) \textperiodcentered{} get\_observable\_hist() \textperiodcentered{} visualize\_history()};
-
-\begin{pgfonlayer}{page}
-  \fill[white] ([shift={(-2.5mm,-2.5mm)}]current bounding box.south west)
-    rectangle ([shift={(2.5mm,2.5mm)}]current bounding box.north east);
-\end{pgfonlayer}
 
 \end{tikzpicture}
 \end{document}

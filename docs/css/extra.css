@@ -1,0 +1,12 @@
+/* The Model schematic spans the content column, and is drawn on a transparent
+   canvas so the dark theme can invert it: invert(1) flips the lightness, and
+   hue-rotate(180deg) puts the hues back roughly where they were drawn. */
+.model-figure {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+[data-md-color-scheme="slate"] .model-figure {
+    filter: invert(1) hue-rotate(180deg);
+}
