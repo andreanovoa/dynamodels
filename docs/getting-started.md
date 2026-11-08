@@ -28,6 +28,10 @@ model.visualize_history()
 model.close()                            # release the integrator's pool
 ```
 
+dynamodels runs silently. For debugging, `dynamodels.set_verbose()` prints its
+diagnostic messages on stderr (e.g. the multiprocessing pool of an ensemble), and
+`dynamodels.set_verbose(False)` silences them again.
+
 ## The `Model` interface
 
 Every model in `dynamodels.physical` subclasses [`Model`](api/model.md) and supplies:

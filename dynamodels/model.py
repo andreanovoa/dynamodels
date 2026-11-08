@@ -111,7 +111,8 @@ class Model:
         [setattr(self, key, kwargs.pop(key)) for key in keys if hasattr(self, key)]
 
         if len(kwargs.keys()) > 1:
-            print(f'Model key(s) {kwargs.keys()} not assigned')
+            warnings.warn(f'{type(self).__name__}: keyword(s) {sorted(kwargs)} are not attributes of the model '
+                          'and are ignored', stacklevel=2)
 
         # ====================== SET INITIAL CONDITIONS ====================== ##
 
@@ -947,11 +948,11 @@ class Model:
         """Plot ensemble state (and parameter) distributions via
         `plot_state_distribution`.
 
-        No-op (prints a message) if no ensemble is configured
+        No-op (with a warning) if no ensemble is configured
         (`ensemble_cfg` is False).
         """
         if self.ensemble_cfg is False:
-            print("No ensemble configuration found. Cannot plot state distribution.")
+            warnings.warn('No ensemble configuration (init_ensemble): no state distribution to plot.', stacklevel=2)
             return
         kwargs_state = allowed_kwargs_for_func(plot_state_distribution, kwargs)
         plot_state_distribution(self, **kwargs_state)

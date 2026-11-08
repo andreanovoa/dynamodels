@@ -12,6 +12,7 @@ __all__ = [
     'ivp_forecast_helper',
 ]
 
+import logging
 from copy import deepcopy
 from functools import partial
 from sys import platform
@@ -24,6 +25,8 @@ if platform == "darwin" or platform == "ios":
     import multiprocess as mp
 else:
     import multiprocessing as mp
+
+logger = logging.getLogger(__name__)
 
 
 
@@ -315,7 +318,8 @@ class IVPIntegrator(Integrator):
         if self._pool is None and self.model.m > 1:
             # Initialize multiprocessing pool
             N_pools = min(self.model.m, mp.cpu_count())
-            print(f'Initializing multiprocessing pool for IVPIntegrator with m={self.model.m} and {N_pools} pools.')
+            logger.debug('Initializing multiprocessing pool for IVPIntegrator with m=%d and %d pools.',
+                         self.model.m, N_pools)
             self._pool = mp.Pool(N_pools)
         return self._pool
 
@@ -382,12 +386,7 @@ class IVPIntegrator(Integrator):
                                     t=t_all,
                                     params={**pm.alpha0, **args})]
 
-        try:
-            psi = np.array(psi).transpose((1, 2, 0))
-        except ValueError as e:
-            print(f"Error during final array construction: {e}")
-            psi = np.array(psi).T.reshape(-1, psi0.shape[0], pm.m)
-
+        psi = _stack_members(psi, len(t_all))
         return psi[1:], t_all[1:]
 
 
@@ -456,14 +455,20 @@ class IVPIntegrator(Integrator):
 
 
         # Rearrange dimensions to be Nt+1 x N x m and remove initial condition
-        try:
-            psi = np.array(psi).transpose((1, 2, 0))
-        except ValueError as e:
-            print(f"Error during final array construction: {e}")
-            psi = np.array(psi).T.reshape(-1, psi0.shape[0], pm.m)
-
+        psi = _stack_members(psi, len(t_all))
         return psi[1:], t_all[1:]
 
+
+
+def _stack_members(psi, n_t):
+    """The ensemble forecast (n_t, N, m) from the solutions (n_t, N) of the m members. A member whose integration
+    stopped before the last time (`solve_ivp` failed, e.g. a diverging state) has fewer rows, and raises."""
+    short = [i for i, p in enumerate(psi) if len(p) != n_t]
+    if short:
+        raise RuntimeError(f'solve_ivp stopped before the end of the forecast for member(s) {short} '
+                           f'({[len(psi[i]) for i in short]} of {n_t} times): the state diverged or the '
+                           'integration failed')
+    return np.array(psi).transpose((1, 2, 0))
 
 
 def ivp_forecast_helper(y0, fun, t, params, method='RK45'):
