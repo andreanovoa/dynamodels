@@ -25,7 +25,7 @@ from .integrator import ConstantIntegrator, DiscreteIntegrator, Integrator, IVPI
 from .model import Model  # noqa: E402
 from .verbose import set_verbose  # noqa: E402
 
-__version__ = "0.6.0"
+__version__ = "0.6.1"
 
 __all__ = [
     "Model",
