@@ -5,7 +5,7 @@ import os
 import sys
 import warnings
 from collections.abc import Sequence
-from functools import partialmethod
+from functools import partialmethod, singledispatchmethod
 
 import numpy as np
 import scipy.io as sio
@@ -40,15 +40,22 @@ def _warn(message: str, category: type[Warning] = UserWarning) -> None:
 def _is_method(cls: type, name: str) -> bool:
     """Whether the class attribute `name` of `cls` (or of a base class) is a method rather than a value.
 
-    A method is a staticmethod, a classmethod, a partialmethod or a callable that binds to the instance, e.g. a
-    function defined in the class body. A value may be callable too, e.g. a ufunc, a class or a builtin function held
-    by a class attribute: it does not bind, and a keyword of the model may set it, whereas a keyword that named a
-    method would replace the method.
+    A method is a staticmethod, a classmethod, a partialmethod, a singledispatchmethod or a callable that binds to
+    the instance, e.g. a function defined in the class body. A partialmethod and a singledispatchmethod are not
+    callable themselves, but give a method when they bind. A value may be callable too, e.g. a ufunc, a class or a
+    builtin function held by a class attribute: it does not bind, and a keyword of the model may set it, whereas a
+    keyword that named a method would replace the method.
     """
     attr = inspect.getattr_static(cls, name, None)
-    if isinstance(attr, (staticmethod, classmethod, partialmethod)):
+    if isinstance(attr, (staticmethod, classmethod, partialmethod, singledispatchmethod)):
         return True
     return callable(attr) and hasattr(type(attr), '__get__')
+
+
+def _is_real_number(value) -> bool:
+    """Whether `value` is a real number: an int or a float of Python or numpy, or a 0-d array of one, but not a bool
+    (a bool is an int in Python) and not a complex number."""
+    return np.ndim(value) == 0 and np.asarray(value).dtype.kind in 'iuf'
 
 
 def allowed_kwargs_for_func(func, kwargs):

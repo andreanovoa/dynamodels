@@ -11,6 +11,7 @@ from .history import HistoryTracker
 from .integrator import Integrator, IVPIntegrator
 from .utils import (
     _is_method,
+    _is_real_number,
     _warn,
     allowed_kwargs_for_func,
     mean_vector_to_ensemble,
@@ -70,6 +71,10 @@ class Model:
         equations through `governing_eqns_params` (see `set_fixed_params`).
     extra_print_params : list of str
         Extra attribute names appended to `params` when building `print_params`.
+    filename_labels : dict
+        Labels ``{name: label}`` with which `filename` writes the parameters
+        whose label differs from their name (empty by default). `Rijke` writes
+        its length `L` as ``Ltube``.
     governing_eqns_params : dict
         Extra keyword arguments passed to `time_derivative` / `time_step`.
     t_transient : float
@@ -93,6 +98,7 @@ class Model:
     params = []  # List of parameter names that can be varied in the model
     fixed_params = []
     extra_print_params = []
+    filename_labels = {}
     governing_eqns_params = dict()
 
     t = 0.
@@ -307,17 +313,25 @@ class Model:
     def filename(self):
         """str: Descriptive filename built from `name` and the parameters in
         `alpha0` that differ from their class defaults (falls back to
-        ``f"{name}_default"`` if none differ). Cached after first access; also
-        extended with an ``_ensemble_m{m}`` suffix by `init_ensemble`.
+        ``f"{name}_default"`` if none differ). A parameter without a class
+        default, e.g. one that a subclass sets in its constructor and lists in
+        `params`, always enters the filename. The structural parameters in
+        `fixed_params` with a scalar class default enter it too, if they
+        differ from that default. Each parameter enters as its label in
+        `filename_labels`, or else as its name, followed by its value.
+        Cached after first access; also extended with an ``_ensemble_m{m}``
+        suffix by `init_ensemble`.
         """
         if not hasattr(self, '_filename'):
+            labels, no_default = self.filename_labels, object()
             suffix = ''
             for key, val in self.alpha0.items():
-                if val != getattr(self.__class__, key):
-                    if np.log10(abs(val)) < -3:
-                        suffix += f'_{key}{val:.2e}'
+                default = getattr(type(self), key, no_default)
+                if default is no_default or val != default:
+                    if abs(val) < 1e-3:         # as log10|val| < -3, without the warning of log10(0)
+                        suffix += f'_{labels.get(key, key)}{val:.2e}'
                     else:
-                        suffix += f'_{key}{val}'
+                        suffix += f'_{labels.get(key, key)}{val}'
             if len(suffix) == 0:
                 suffix = '_default'
             # Structural parameters (`fixed_params`, e.g. Lorenz96's Nx) are keyed in
@@ -327,7 +341,7 @@ class Model:
             for key in self.fixed_params:
                 default, val = getattr(type(self), key, None), getattr(self, key)
                 if np.isscalar(default) and np.isscalar(val) and val != default:
-                    suffix += f'_{key}{val}'
+                    suffix += f'_{labels.get(key, key)}{val}'
             self._filename = f"{self.name}{suffix}"
 
         return self._filename
@@ -437,11 +451,16 @@ class Model:
 
         Raises
         ------
+        TypeError
+            If `value` is not a real number, e.g. a bool.
         ValueError
-            If `value` is not strictly positive.
+            If `value` is not positive and finite, e.g. 0, ``np.inf`` or
+            ``np.nan``.
         """
-        if value <= 0:
-            raise ValueError("Time step must be positive.")
+        if not _is_real_number(value):
+            raise TypeError(f"Time step must be a real number, not {value!r}.")
+        if not 0 < value < np.inf:
+            raise ValueError(f"Time step must be positive and finite, not {value}.")
         self._precision_t = int(np.ceil(-np.log10(value) + 2))  # Set precision based on dt
         # Keep the decimals that dt itself needs (1/51200 = 1.953125e-5 needs 11), up to 12; rounding to
         # the 2 extra digits alone made such a step 0.16% short and the model drift from the data clock.
@@ -752,15 +771,23 @@ class Model:
         ValueError
             If a keyword is neither `dt` nor a name in `params` (a structural
             change, such as a new grid, needs a new model), if a keyword is
-            in `est_alpha`, if `psi0` has the wrong shape, or if ``dt <= 0``.
+            in `est_alpha`, if `psi0` has the wrong shape, if `dt` is not
+            positive and finite (e.g. ``dt=np.inf``), or if a step that
+            derives a quantity from a parameter rejects its value, e.g.
+            ``nu1=0.`` of `KS2D`.
         typeguard.TypeCheckError
-            If `dt` is not a float, as in the constructor.
+            If `dt` is neither a float nor an int, e.g. ``dt='0.1'``, as in
+            the constructor.
         TypeError
-            If the model cannot employ the value of a parameter, e.g.
-            ``Lorenz63().reset_model(rho='35')``. As in the constructor, the
-            values of the parameters are not checked: the error is that of
-            the step that fails, and a value from which the model derives
-            nothing fails at the next forecast instead.
+            If `dt` is a bool, or if the value of a parameter is not a real
+            number, e.g. ``VdP().reset_model(beta='a')`` or
+            ``Lorenz63().reset_model(rho=None)``. Unlike the constructor,
+            `reset_model` checks that the values of the parameters are real
+            numbers before it changes the model. It does not check their
+            range: a step of the reset that cannot employ a value raises its
+            own error (e.g. ``nu1=0.`` of `KS2D`), and a value from which the
+            model derives nothing, e.g. ``rho=-1.`` of `Lorenz63`, is
+            accepted.
         """
         unknown = sorted(set(kwargs) - {'dt', *self.params})
         if unknown:
@@ -770,6 +797,11 @@ class Model:
         if estimated:  # the rows of the state, not alpha0, hold the values of the members
             raise ValueError(f'{type(self).__name__}.reset_model: {estimated} are estimated (est_alpha); pass the '
                              'values of the members in the parameter rows of psi0 instead.')
+        # Checked here, so that the outcome does not depend on a later step that happens to fail on the value, such
+        # as the filename, which is derived again only if it is cached; the dt setter checks dt
+        not_real = {key: val for key, val in kwargs.items() if key != 'dt' and not _is_real_number(val)}
+        if not_real:
+            raise TypeError(f'{type(self).__name__}.reset_model: the parameters take real numbers, not {not_real}.')
 
         Nphi, Na = self.Nphi, self.Na
         psi0 = np.array(self.current_state if psi0 is None else psi0)
@@ -1031,11 +1063,16 @@ class Model:
             define, and that its forecast reads for each member, as the ESN of
             romda estimates the spectral radius `rho` of its echo state
             network. Any other name raises: a name that is not an attribute of
-            the model (e.g. a misspelt parameter), a method, a structural
+            the model (e.g. a misspelt parameter), an attribute that a
+            subclass sets only on the instance, e.g. ``self.gain = 1.`` in its
+            constructor, without a class attribute, a method, a structural
             parameter in `fixed_params` (e.g. ``'nu'`` of `KS`, whose `params`
             is empty), a private name, or another attribute of a dynamodels
-            model (e.g. `dt`, or ``'xf'`` of `Rijke`). The names are checked
-            after `modify_settings`, which may register parameters.
+            model (e.g. `dt`, or ``'xf'`` of `Rijke`). A subclass registers an
+            attribute as a parameter by listing its name in `params`, e.g.
+            ``params = [*Lorenz63.params, 'gain']`` in the class body, or by
+            adding it to `params` in `modify_settings`. The names are checked
+            after `modify_settings`.
 
         Notes
         -----
@@ -1080,7 +1117,8 @@ class Model:
                 raise ValueError(f'{type(self).__name__}.init_ensemble cannot estimate {unknown}: est_alpha, or the '
                                  f'keys of a std_alpha dict, name the parameters of the model, params = '
                                  f'{list(self.params)}, not other attributes (e.g. dt), methods or structural '
-                                 f'parameters, fixed_params = {list(self.fixed_params)}.')
+                                 f'parameters, fixed_params = {list(self.fixed_params)}. A subclass registers an '
+                                 f'attribute as a parameter if it adds its name to params.')
 
             # Invalidate M cache so it is rebuilt with the updated N = Nphi + Na + Nq.
             if hasattr(self, '_M'):

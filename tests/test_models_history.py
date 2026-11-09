@@ -102,6 +102,23 @@ def test_dt_kept_exact():
     v.close()
 
 
+@pytest.mark.parametrize('dt, error, match', [(True, TypeError, 'must be a real number'),
+                                              (np.inf, ValueError, 'must be positive and finite'),
+                                              (np.nan, ValueError, 'must be positive and finite'),
+                                              (0., ValueError, 'must be positive and finite')],
+                         ids=['bool', 'inf', 'nan', 'zero'])
+def test_dt_that_is_not_a_time_step_raises_a_clear_error(dt, error, match):
+    """The dt setter rejects a bool (a bool is an int) and a step that is not positive and finite, which failed with
+    a numpy UFuncTypeError (True) or an OverflowError (inf) where it derives precision_t."""
+    with pytest.raises(error, match=match):
+        Lorenz63(dt=dt)
+    model = Lorenz63()
+    with pytest.raises(error, match=match):
+        model.dt = dt
+    assert model.dt == Lorenz63().dt
+    model.close()
+
+
 @pytest.fixture
 def solve_ivp_methods(monkeypatch):
     """The scipy method (e.g. 'RK23') of every solve_ivp call that the IVP integrator makes in this process."""
@@ -173,6 +190,24 @@ def test_single_member_forecasts_with_its_estimated_parameters():
     assert np.all(alone[:, 3] == 40.)                                       # the parameter row is kept
 
 
+class DuckLorenz63:
+    """A model that is not a Model (Integrator accepts one): alpha0 and governing_eqns_params, but no get_alpha, as
+    the IVPIntegrator of dynamodels 0.6.0 required for a single member."""
+    dt, precision_t, current_time = 0.01, 4, 0.
+    alpha0 = dict(rho=35., sigma=10., beta=8. / 3.)
+    governing_eqns_params = {}
+    current_state = np.array([[1.], [2.], [3.]])
+    time_derivative = staticmethod(Lorenz63.time_derivative)
+
+
+def test_single_member_of_a_model_without_get_alpha_forecasts_with_alpha0():
+    psi, t = integrator.IVPIntegrator(DuckLorenz63()).advance(Nt=20)
+    ref = Lorenz63(psi0=[1., 2., 3.], dt=0.01, rho=35.)
+    psi_ref, t_ref = ref.time_integrate(Nt=20)
+    ref.close()
+    assert psi.shape == (20, 3, 1) and np.array_equal(psi, psi_ref) and np.array_equal(t, t_ref)
+
+
 def test_pool_member_follows_method():
     """IVPIntegrator.method reaches the members that the pool solves (averaged=False): a member forecast through the
     pool equals the same member forecast alone with the same method, and DOP853 differs from RK45."""
@@ -209,8 +244,11 @@ def test_method_is_an_attribute_of_each_integrator(monkeypatch):
     (Lorenz63, dict(est_alpha=['Nphi', 'precision_t']), "['Nphi', 'precision_t']"),  # a property, an instance attribute
     (Lorenz63, dict(est_alpha=['_psi0']), "['_psi0']"),  # private
     (lambda: Shadow(), dict(est_alpha=['t_lyap']), "['t_lyap']"),  # a subclass outside dynamodels overrides it
+    (lambda: InstanceGain(), dict(est_alpha=['gain']), "['gain']"),  # set on the instance only, not in params
+    (lambda: Structural(), dict(est_alpha=['width']), "['width']"),  # in the fixed_params of a subclass
 ], ids=['KS-nu', 'Lorenz96-Nx', 'Lorenz63-rhoo', 'Lorenz63-copy', 'VdP-foo', 'Rijke-tau-foo', 'KS-dt', 'KS-attributes',
-        'Rijke-xf', 'Rijke-Nq', 'Annular-ER', 'Lorenz63-attributes', 'Lorenz63-derived', 'Lorenz63-private', 'Shadow'])
+        'Rijke-xf', 'Rijke-Nq', 'Annular-ER', 'Lorenz63-attributes', 'Lorenz63-derived', 'Lorenz63-private', 'Shadow',
+        'instance-attribute', 'subclass-fixed_params'])
 def test_init_ensemble_rejects_a_name_that_cannot_be_estimated(make, kwargs, unknown):
     """A name to estimate that the model does not have, a method, a structural parameter or another attribute of
     dynamodels raises a ValueError at init_ensemble, not an opaque error at the forecast, and leaves the model as it
@@ -234,6 +272,49 @@ def test_init_ensemble_rejects_a_name_that_cannot_be_estimated(make, kwargs, unk
 class Shadow(Lorenz63):
     """Overrides an attribute that dynamodels defines, which stays an attribute of dynamodels, not a parameter."""
     t_lyap = 2.
+
+
+class Structural(Lorenz63):
+    """Declares a structural parameter of its own, outside dynamodels, in fixed_params: not estimable."""
+    width = 2.
+    fixed_params = ['width']
+
+    @staticmethod
+    def time_derivative(t, psi, sigma, rho, beta, width):
+        return Lorenz63.time_derivative(t, psi, sigma, rho, beta)
+
+
+class InstanceGain(Lorenz63):
+    """Sets 'gain' on the instance only, in its constructor: no class attribute, and not in params."""
+
+    def __init__(self, **kwargs):
+        self.gain = 1.
+        super().__init__(**kwargs)
+
+    @staticmethod
+    def time_derivative(t, psi, sigma, rho, beta, gain=1.):
+        return gain * np.asarray(Lorenz63.time_derivative(t, psi, sigma, rho, beta))
+
+
+class ListedGain(InstanceGain):
+    """Registers 'gain', which it sets on the instance only, by listing it in params."""
+    params = [*Lorenz63.params, 'gain']
+
+
+def test_init_ensemble_estimates_an_instance_attribute_listed_in_params():
+    """An attribute that a subclass sets on the instance only is not a parameter, and the error tells how to register
+    it. Listed in params, it is estimated, and it enters the filename, although it has no class default."""
+    with pytest.raises(ValueError, match=r"cannot estimate \['gain'\].*adds its name to params"):
+        InstanceGain().init_ensemble(m=3, est_alpha=['gain'])
+    model = ListedGain(gain=2.)
+    model.t_transient = 0.1
+    model.init_ensemble(m=3, est_alpha=['gain'], std_alpha=0.1)
+    assert model.alpha0['gain'] == 2. and model.filename == 'ListedGain_gain2.0_ensemble_m3'
+    gains = model.current_state[3].copy()
+    assert [alpha['gain'] for alpha in model.get_alpha()] == gains.tolist() and np.all(np.abs(gains - 2.) <= 0.2)
+    psi = model.time_integrate(Nt=5)[0]
+    model.close()
+    assert np.isfinite(psi).all() and np.array_equal(psi[:, 3], np.repeat(gains[np.newaxis], 5, axis=0))
 
 
 class Registering(Lorenz63):

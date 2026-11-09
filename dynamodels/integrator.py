@@ -330,12 +330,16 @@ class IVPIntegrator(Integrator):
         more steps, typically a diverged state whose time scale has
         collapsed, stops instead of stalling `solve_ivp`, and the forecast
         raises a `RuntimeError` that names the member. With their default
-        `dt`, healthy forecasts of the models in dynamodels take at most 15
-        solver steps per output step (Rijke with BDF or LSODA). The number of
-        steps grows with `dt`, so a very coarse output step needs a larger
-        `max_steps` too: Lorenz63 takes about 12 steps of RK45 per time unit
-        and reaches the default at about ``dt = 800``. Set it on one
-        integrator (``model.integrator.max_steps = 10**5``) or on the class
+        `dt`, healthy forecasts of the models in dynamodels, over the
+        transient and 2000 output steps on the attractor, take at most 12
+        solver steps per output step with RK45, RK23 or DOP853, and at most
+        60 with Radau, BDF or LSODA. The most are those of Rijke with LSODA:
+        45 with the default parameters, and 58 in the chaotic regime
+        (``case='chaotic'``). The number of steps grows with `dt`, so a very
+        coarse output step needs a larger `max_steps` too: Lorenz63 takes
+        about 12 steps of RK45 per time unit and reaches the default at about
+        ``dt = 800``. Set it on one integrator
+        (``model.integrator.max_steps = 10**5``) or on the class
         (``IVPIntegrator.max_steps = 10**5``), which changes the default of
         every integrator that has not set its own. Unlike `method`, it is a
         class attribute.
@@ -424,7 +428,9 @@ class IVPIntegrator(Integrator):
             `advance_ensemble`, the governing equations are called with the
             parameters of the member, ``model.get_alpha()[0]``, i.e. `alpha0`
             with the values of the estimated parameters (`est_alpha`) in the
-            state of the member, and with `model.governing_eqns_params`.
+            state of the member, and with `model.governing_eqns_params`. A
+            model that has no `get_alpha` (it need not be a `Model`) is
+            called with its `alpha0`.
 
         Returns
         -------
@@ -449,12 +455,15 @@ class IVPIntegrator(Integrator):
         psi0 = pm.current_state
         self._check_finite(psi0)
         args = pm.governing_eqns_params
+        # with the estimated parameters; a duck-typed model may have alpha0 only, as dynamodels 0.6.0 required
+        get_alpha = getattr(pm, 'get_alpha', None)
+        alpha = get_alpha()[0] if get_alpha is not None else pm.alpha0
 
         # --- IVP Logic
         psi, reason = ivp_forecast_helper(y0=psi0[:, 0],
                                           fun=pm.time_derivative,
                                           t=t_all,
-                                          params={**pm.get_alpha()[0], **args},   # with the estimated parameters
+                                          params={**alpha, **args},
                                           method=self.method,
                                           max_steps=self.max_steps,
                                           full_output=True)

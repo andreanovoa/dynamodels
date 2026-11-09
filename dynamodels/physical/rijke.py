@@ -128,6 +128,9 @@ class Rijke(Model):
                     'law', 'meanFlow', 'Nc', 'Nm', 'tau_adv', 'sinomjxf', 'xf']
 
     extra_print_params = ['law', 'Nm', 'Nc', 'xf', 'L']
+    # dynamodels 0.6.0 wrote a length L != 1 as '_L{L}' in the filename, but derived the modes (jpiL, sinomjxf) and
+    # the mean flow from L = 1: a new label keeps the datasets that it cached under those names from being loaded
+    filename_labels = {'L': 'Ltube'}
 
     def __init__(self, **model_dict):
 

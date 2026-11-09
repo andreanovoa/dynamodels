@@ -79,9 +79,14 @@ ensembles are supported natively through `init_ensemble`, which estimates the
 parameters named in `est_alpha`, from `params`. Any other name raises a
 `ValueError` at `init_ensemble`, e.g. a misspelt parameter, the structural
 `'nu'` of `KS`, or an attribute that is not a parameter, such as `dt` or the
-flame location `'xf'` of `Rijke`. (A subclass defined outside dynamodels may
-also estimate a class attribute of its own; see `Model.init_ensemble`.) An
-`init_ensemble` that fails leaves the model as it was.
+flame location `'xf'` of `Rijke`. A subclass defined outside dynamodels may
+also estimate a class attribute of its own (see `Model.init_ensemble`), but
+not an attribute that it sets on the instance only, e.g. `self.gain = 1.` in
+its constructor. The subclass registers such an attribute as a parameter by
+listing its name in `params`, e.g. `params = [*Lorenz63.params, 'gain']` in
+the class body, and sets it before calling `super().__init__()`, which reads
+the parameters into `alpha0`. An `init_ensemble` that fails leaves the model
+as it was.
 
 `reset_model` restarts a model in place at `t = 0`, from its current state or
 from a new `psi0`. The model keeps its ensemble, with the number of members,
@@ -92,10 +97,10 @@ are not carried over. Only the values that are overridden change:
 `model.reset_model(rho=35.)` changes `rho`, and keeps `dt` and the other
 parameters. A structural change, such as a new grid, needs a new model. A new
 parameter derives the `filename` again, which replaces a filename set by the
-user. A reset that fails, e.g. with a value that the model cannot employ,
-leaves the model as it was, with its integrator and its pool. A subclass whose
-constructor derives quantities from `dt` or from a parameter, e.g. a Lyapunov
-time, derives them again in `reset_derived`.
+user. A new value of a parameter must be a real number. A reset that fails,
+e.g. with `rho=None`, leaves the model as it was, with its integrator and its
+pool. A subclass whose constructor derives quantities from `dt` or from a
+parameter, e.g. a Lyapunov time, derives them again in `reset_derived`.
 
 Because every model shares this interface, code written against one — a
 forecast loop, a plotting routine, a Lyapunov-exponent estimator — runs

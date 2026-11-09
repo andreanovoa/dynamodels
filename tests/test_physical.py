@@ -167,6 +167,21 @@ def test_rijke_xf_keys_the_filename_and_the_respawn():
         model.close()
 
 
+def test_rijke_length_keys_the_filename_apart_from_dynamodels_0_6_0(tmp_path):
+    """dynamodels 0.6.0 wrote a length L != 1 as '_L{L}' in the filename, but built the modes and the mean flow from
+    L = 1, so the datasets that it cached under those names hold other dynamics. The label Ltube keeps create_dataset
+    from loading them; the names of the default length do not change."""
+    from dynamodels.utils import create_dataset, save_to_mat_file
+    long = Rijke(L=1.2)
+    assert long.filename == 'Rijke_default_Ltube1.2' and Rijke().filename == 'Rijke_default'
+    assert Rijke(L=1.2, xf=0.3, beta=3.).filename == 'Rijke_beta3.0_Ltube1.2_xf0.3'
+    stale = dict(clean_data=np.zeros((5, long.Nphi)), noisy_data=np.zeros((5, long.Nphi)), t=np.arange(5.), N_lyap=200)
+    save_to_mat_file(str(tmp_path / 'Rijke_default_L1.2_Nlyap1_noise0.02_seed0'), stale)     # as 0.6.0 named it
+    data, path = create_dataset(Rijke, str(tmp_path), num_lyap_times=1, L=1.2)
+    assert path.endswith('Rijke_default_Ltube1.2_Nlyap1_noise0.02_seed0') and np.abs(data['clean_data']).max() > 0
+    long.close()
+
+
 def test_rijke_tau_adv_keyword():
     """A tau_adv keyword spans the delay line if it is longer than tau, and gives way to a longer tau, as when
     ntsa.respawn carries the tau_adv of a model into a sweep over tau. reset_model keeps it, as the constructor does."""

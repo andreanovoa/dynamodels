@@ -151,20 +151,32 @@ def kept(model, before):
     return vars(model).keys() == before.keys() and all(vars(model)[key] is val for key, val in before.items())
 
 
-@pytest.mark.parametrize('cls, override, error', [(Lorenz63, dict(rho=None), TypeError),  # fails at t_lyap
-                                                  (Lorenz63, dict(rho='35'), TypeError),
-                                                  (Rijke, dict(beta=None), TypeError),
-                                                  (VdP, dict(beta='a'), TypeError),  # fails at the filename
-                                                  (Lorenz63, dict(dt='a'), TypeCheckError)],
-                         ids=['Lorenz63-rho-None', 'Lorenz63-rho-str', 'Rijke-beta-None', 'VdP-beta-str', 'dt-str'])
-def test_reset_that_fails_late_leaves_the_model_unchanged(cls, override, error):
-    """A reset that fails after Model.__init__ has run (in reset_derived, or while the filename is derived again)
-    leaves every attribute of the model as it was, and the model forecasts as before."""
-    m = advanced(cls(), Nt=3)
-    _ = m.filename  # cache the name, which a new parameter derives again
+@pytest.mark.parametrize('cached', [True, False], ids=['filename-cached', 'filename-not-cached'])
+@pytest.mark.parametrize('make, override, error, match', [
+    (Lorenz63, dict(rho=None), TypeError, 'take real numbers'),     # t_lyap derives from rho
+    (Lorenz63, dict(rho='35'), TypeError, 'take real numbers'),
+    (Rijke, dict(beta=None), TypeError, 'take real numbers'),
+    (VdP, dict(beta='a'), TypeError, 'take real numbers'),          # nothing but the filename derives from beta
+    (lambda: Lorenz96(Nx=40), dict(F=None), TypeError, 'take real numbers'),   # t_lyap derives from F if Nx = 10
+    (Lorenz63, dict(sigma=True), TypeError, 'take real numbers'),   # a bool is an int, not a parameter value
+    (VdP, dict(beta=1j), TypeError, 'take real numbers'),           # a complex number is not a parameter value
+    (Lorenz63, dict(dt='a'), TypeCheckError, 'float'),
+    (Lorenz63, dict(dt=True), TypeError, 'must be a real number'),  # a numpy UFuncTypeError where precision_t derives
+    (Lorenz63, dict(dt=np.inf), ValueError, 'positive and finite'),     # an OverflowError where precision_t derives
+    (Lorenz63, dict(dt=np.nan), ValueError, 'positive and finite')],
+    ids=['Lorenz63-rho-None', 'Lorenz63-rho-str', 'Rijke-beta-None', 'VdP-beta-str', 'Lorenz96-F-None',
+         'Lorenz63-sigma-bool', 'VdP-beta-complex', 'dt-str', 'dt-bool', 'dt-inf', 'dt-nan'])
+def test_reset_with_a_bad_value_leaves_the_model_unchanged(make, override, error, match, cached):
+    """A reset with a value that is not a real number, or a dt that is not a time step, raises a clear error and leaves
+    every attribute of the model as it was, and the model forecasts as before. The outcome does not depend on whether
+    the filename, which a new parameter derives again, is cached: without the cache, VdP(beta='a') and
+    Lorenz96(Nx=40, F=None) derive nothing from the value, and a reset accepted it."""
+    m = advanced(make(), Nt=3)
+    if cached:
+        _ = m.filename
     ref = restarted(m)
     before, history, hist = dict(vars(m)), dict(vars(m.history)), m.hist.copy()
-    with pytest.raises(error):
+    with pytest.raises(error, match=match):
         m.reset_model(**override)
     assert kept(m, before) and kept(m.history, history) and np.array_equal(m.hist, hist)
     assert m.integrator.model is m
@@ -187,6 +199,43 @@ def test_reset_derived_that_fails_is_undone():
     assert kept(m, before) and (m.rho, m.alpha0['rho'], m.dt, m.t_lyap) == (28., 28., 0.02, Lorenz63().t_lyap)
 
 
+def test_reset_interrupted_by_a_base_exception_is_undone():
+    """The undo covers any BaseException, e.g. a KeyboardInterrupt (Ctrl-C) while reset_derived runs, not only the
+    subclasses of Exception."""
+    class Interrupted(Lorenz63):
+        def reset_derived(self, dt, **overrides):
+            super().reset_derived(dt, **overrides)
+            raise KeyboardInterrupt
+
+    m = advanced(Interrupted(), Nt=3)
+    _ = m.filename
+    integrator, before, history, hist = m.integrator, dict(vars(m)), dict(vars(m.history)), m.hist.copy()
+    with pytest.raises(KeyboardInterrupt):
+        m.reset_model(rho=35., dt=0.01)
+    assert kept(m, before) and kept(m.history, history) and np.array_equal(m.hist, hist)
+    assert m.integrator is integrator and (m.rho, m.alpha0['rho'], m.dt) == (28., 28., 0.02)
+    m.close()
+
+
+def test_rijke_reset_of_tau_that_fails_later_keeps_the_limits_of_tau():
+    """For a new tau, Rijke.reset_derived lengthens the delay line and sets new limits for tau. A failure after it
+    restores the limits, which reset_derived replaces with a new dict rather than changing in place, and the span of
+    the delay line."""
+    class FailingLater(Rijke):
+        def reset_derived(self, dt, **overrides):
+            super().reset_derived(dt, **overrides)
+            raise RuntimeError('after Rijke.reset_derived')
+
+    m = FailingLater()
+    lims = m.alpha_lims
+    saved, before = dict(lims), dict(vars(m))
+    with pytest.raises(RuntimeError, match='after Rijke.reset_derived'):
+        m.reset_model(tau=2e-3)
+    assert kept(m, before) and m.alpha_lims is lims and lims == saved and lims['tau'] == (1e-6, 1.5e-3)
+    assert (m.tau, m.tau_adv, m.governing_eqns_params['tau_adv']) == (1.5e-3, 1.5e-3, 1.5e-3)
+    m.close()
+
+
 def test_rejected_reset_keeps_the_integrator_and_pool_of_an_ensemble():
     m = Lorenz63()
     m.init_ensemble(m=3, std_phi=0.1, est_alpha=['rho'], std_alpha=0.1)
@@ -194,7 +243,7 @@ def test_rejected_reset_keeps_the_integrator_and_pool_of_an_ensemble():
     integrator, pool = m.integrator, m.integrator._pool
     assert pool is not None
     before, hist, filename = dict(vars(m)), m.hist.copy(), m.filename
-    for bad, error in ((dict(sigma='a'), TypeError),  # fails while the filename is derived again
+    for bad, error in ((dict(sigma='a'), TypeError),  # not a real number
                        (dict(beta=None), TypeError),
                        (dict(dt='a'), TypeCheckError),
                        (dict(dt=-1.), ValueError),

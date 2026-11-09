@@ -69,8 +69,13 @@ def test_through_a_subclass_the_warning_points_at_the_subclass(attribution):
     assert (w.filename, w.lineno) == (__file__, model.line)
 
 
+def _shift(self, value, by):
+    return value + by
+
+
 class _Custom(Lorenz63):
-    """A user subclass with a property that has a setter, which a keyword sets, and a classmethod, which it does not."""
+    """A user subclass with a property that has a setter, which a keyword sets, and with methods, which it does not
+    set: a classmethod, and a singledispatchmethod and a partialmethod, which are not callable themselves."""
 
     _gain = 1.
 
@@ -86,15 +91,23 @@ class _Custom(Lorenz63):
     def build(cls):
         return cls()
 
+    @functools.singledispatchmethod
+    def scaled(self, value):
+        return 2 * value
+
+    shifted = functools.partialmethod(_shift, by=1)
+
 
 @pytest.mark.parametrize('cls, kwargs, method',
                          [(Lorenz63, {}, 'copy'), (Lorenz63, {}, 'reset_model'), (Lorenz63, {}, 'time_derivative'),
                           (Lorenz63, {}, 't_lyap_from_table'), (_Custom, {}, 'build'),
+                          (_Custom, {}, 'scaled'), (_Custom, {}, 'shifted'),
                           (KS, dict(Nx=32), 'time_step'), (KS, dict(Nx=32), 'get_energy'),
                           (KS, dict(Nx=32), 'reset_derived'), (KS, dict(Nx=32), 'copy'),
                           (KS2D, dict(Nx=16, Ny=16), 'time_step'), (KS2D, dict(Nx=16, Ny=16), 'get_observables'),
                           (KS2D, dict(Nx=16, Ny=16), '_lhat')],
                          ids=['method', 'overridden_method', 'staticmethod', 'inherited_staticmethod', 'classmethod',
+                              'singledispatchmethod', 'partialmethod',
                               'KS-time_step', 'KS-get_energy', 'KS-reset_derived', 'KS-inherited',
                               'KS2D-time_step', 'KS2D-get_observables', 'KS2D-_lhat'])
 def test_keyword_that_names_a_method_is_ignored(attribution, cls, kwargs, method):
@@ -106,6 +119,8 @@ def test_keyword_that_names_a_method_is_ignored(attribution, cls, kwargs, method
     (w,) = _ignored(rec)
     assert (w.filename, w.lineno) == (__file__, line)
     assert method not in vars(model) and getattr(model, method) != 1
+    if method in ('scaled', 'shifted'):     # the method still works
+        assert getattr(model, method)(3) == {'scaled': 6, 'shifted': 4}[method]
     model.time_integrate(Nt=2)      # the forecast of KS calls time_step
     model.copy().close()
     model.close()
@@ -171,8 +186,9 @@ def test_rijke_tau_ensemble_does_not_warn():
     model.close()
 
 
-def test_typeguard_requirement_excludes_typeguard_2():
-    """typeguard 2 wraps @typechecked functions, so every warning of Model.__init__ pointed at typeguard."""
+def test_typeguard_requirement_excludes_typeguard_2_and_the_releases_that_python_3_14_cannot_import():
+    """typeguard 2 wraps @typechecked functions, so every warning of Model.__init__ pointed at typeguard. typeguard
+    3.0 to 4.1.2 import ast.Str, which Python 3.14 removed; 4.1.3 imports and passes the suite on 3.11 and 3.14."""
     tomllib = pytest.importorskip('tomllib')  # Python 3.11+
     requirements = pytest.importorskip('packaging.requirements')
     pyproject = Path(__file__).resolve().parents[1] / 'pyproject.toml'
@@ -181,7 +197,8 @@ def test_typeguard_requirement_excludes_typeguard_2():
     with pyproject.open('rb') as f:
         dependencies = [requirements.Requirement(d) for d in tomllib.load(f)['project']['dependencies']]
     (typeguard,) = [r for r in dependencies if r.name == 'typeguard']
-    assert not typeguard.specifier.contains('2.13.3') and typeguard.specifier.contains('3.0.0')
+    assert not any(typeguard.specifier.contains(v) for v in ('2.13.3', '3.0.0', '4.1.2'))
+    assert typeguard.specifier.contains('4.1.3')
 
 
 def test_typeguard_adds_no_frame_to_model_init():
