@@ -127,6 +127,14 @@ def test_reset_ks2d_parameter_rebuilds_operator():
     assert m.nu1 == 0.5
 
 
+def test_dt_from_numpy_is_stored_as_a_float():
+    m = Lorenz63()
+    for value in (np.array(0.02), np.int64(1), np.float32(0.01)):
+        m.dt = value
+        assert isinstance(m.dt, float) and np.isclose(m.dt, float(value), rtol=1e-6, atol=0)
+    m.close()
+
+
 def test_reset_rejects_bad_input_and_leaves_model_intact():
     m = advanced(Lorenz63())
     before = deepcopy(vars(m))

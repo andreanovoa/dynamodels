@@ -163,7 +163,8 @@ def test_a_partial_is_a_method_where_it_binds():
     with warnings.catch_warnings(record=True) as rec:
         warnings.simplefilter('always')
         model = WithPartial(scaled=min)
-    assert bool(_ignored(rec)) == binds and (model.scaled is min) != binds
+        scaled = model.scaled           # Python 3.13 warns here that a partial will bind
+    assert bool(_ignored(rec)) == binds and (scaled is min) != binds
     model.close()
 
 

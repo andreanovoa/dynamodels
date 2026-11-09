@@ -93,7 +93,9 @@ from a new `psi0`. The model keeps its ensemble, with the number of members,
 the estimated parameters and the observation operator. The model obtains a new
 integrator of the same class, with the same `method` and `max_steps`; the old
 integrator and its pool close, and other attributes set on the old integrator
-are not carried over. Only the values that are overridden change:
+are not carried over (a subclass of `Integrator` whose constructor needs
+arguments besides the model cannot be reset this way). Only the values that
+are overridden change:
 `model.reset_model(rho=35.)` changes `rho`, and keeps `dt` and the other
 parameters. A structural change, such as a new grid, needs a new model. A new
 parameter derives the `filename` again, which replaces a filename set by the

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from contextlib import contextmanager
 from copy import deepcopy
 
@@ -320,7 +321,8 @@ class Model:
         differ from that default. Each parameter enters as its label in
         `filename_labels`, or else as its name, followed by its value.
         Cached after first access; also extended with an ``_ensemble_m{m}``
-        suffix by `init_ensemble`.
+        suffix by `init_ensemble` (one suffix: a second `init_ensemble`
+        replaces it).
         """
         if not hasattr(self, '_filename'):
             labels, no_default = self.filename_labels, object()
@@ -456,9 +458,12 @@ class Model:
         ValueError
             If `value` is not positive and finite, e.g. 0, ``np.inf`` or
             ``np.nan``.
+
+        The value is stored as a float: a numpy scalar or a 0-d array is converted.
         """
         if not _is_real_number(value):
             raise TypeError(f"Time step must be a real number, not {value!r}.")
+        value = float(value)        # a numpy scalar or a 0-d array is stored as a float
         if not 0 < value < np.inf:
             raise ValueError(f"Time step must be positive and finite, not {value}.")
         self._precision_t = int(np.ceil(-np.log10(value) + 2))  # Set precision based on dt
@@ -734,7 +739,9 @@ class Model:
         `params` keep their values unless they are overridden. The model gets
         a new integrator of the same class, to which an `IVPIntegrator` passes
         its `method` and `max_steps`; other attributes set on the old
-        integrator are not carried over. An ensemble keeps the configuration
+        integrator are not carried over, and a subclass of `Integrator` whose
+        constructor needs arguments besides the model cannot be reset this
+        way. An ensemble keeps the configuration
         of `init_ensemble`: the number of members `m`, the estimated
         parameters `est_alpha` and the observation operator `M`.
         `reset_derived` then derives again the
@@ -1082,7 +1089,10 @@ class Model:
         after a transient forecast of `t_transient`. In that forecast, the
         members keep their parameters: those of `alpha0`, or the values in the
         parameter rows of a previous `init_ensemble`, by the names of that
-        previous `est_alpha`. If the number of members changes, the pool of
+        previous `est_alpha`, unless the `modify_settings` of the subclass
+        rebuilds the state (`Rijke` estimating `tau` grows its delay line: the
+        transient then starts from the mean of the members, with the parameters
+        of `alpha0`). If the number of members changes, the pool of
         worker processes of an `IVPIntegrator` closes, and the next forecast
         with ``averaged=False`` starts a pool for the new members.
 
@@ -1173,7 +1183,8 @@ class Model:
                 )
 
             self.update_history(psi=ensemble_psi0, t=self.hist_t[[0]], reset=True)
-            self.filename += f"_ensemble_m{m}"
+            # one suffix: a second init_ensemble replaces the suffix of the first
+            self.filename = re.sub(r'_ensemble_m\d+$', '', self.filename) + f"_ensemble_m{m}"
 
         if self.m != m_old:     # a pool started for the old members does not serve the new ones
             self.integrator.close()     # not self.close(): a subclass may close more, e.g. the forecaster of a bias

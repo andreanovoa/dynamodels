@@ -195,6 +195,7 @@ def test_a_new_number_of_members_closes_the_pool(caplog):
         assert model.integrator._pool is pool
         model.init_ensemble(m=6, std_phi=0.1)
         assert model.integrator._pool is None
+        assert model.filename == 'Lorenz63_default_ensemble_m6'     # one suffix, of the last init_ensemble
         model.time_integrate(Nt=2)
         model.update_history(model.current_state[None, :, :3], t=np.array([model.current_time]), reset=True)
         assert model.m == 3
