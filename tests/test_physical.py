@@ -73,6 +73,157 @@ def test_rijke_cases():
         Rijke(case='nope')
 
 
+def test_rijke_delay_longer_than_the_default():
+    """The delay line spans a delay tau longer than the default 1.5e-3, given to the constructor or to reset_model,
+    and keeps the default span for a shorter delay."""
+    m = Rijke(tau=2e-3)
+    assert m.tau_adv == m.governing_eqns_params['tau_adv'] == 2e-3 and m.alpha_lims['tau'] == (1e-6, 2e-3)
+    psi = m.time_integrate(Nt=20)[0]
+    assert np.all(np.isfinite(psi))
+    r = Rijke()
+    r.reset_model(tau=2e-3)
+    assert r.tau_adv == r.governing_eqns_params['tau_adv'] == 2e-3 and r.alpha_lims['tau'] == (1e-6, 2e-3)
+    assert np.array_equal(r.time_integrate(Nt=20)[0], psi)
+    short = Rijke(tau=1e-3)
+    r.reset_model(tau=1e-3)
+    assert short.tau_adv == r.tau_adv == r.governing_eqns_params['tau_adv'] == 1.5e-3
+    assert np.array_equal(r.time_integrate(Nt=20)[0], short.time_integrate(Nt=20)[0])
+    for model in (m, r, short):
+        model.close()
+
+
+def test_rijke_delay_line_points_grow_with_the_delay():
+    """Without Nc, the delay line has 5000 points per second of tau_adv, and no fewer than 10. A coarser Nc warns, and
+    reset_model refuses a delay that the line of the model cannot resolve, leaving the model unchanged."""
+    for tau, nc in ((1e-3, 10), (1.5e-3, 10), (2e-3, 10), (3e-3, 15), (5e-3, 25), (1e-2, 50)):
+        m = Rijke(tau=tau)
+        assert (m.Nc, m.Nphi, m.psi0.shape, m.Dc.shape) == (nc, 20 + nc, (20 + nc, 1), (nc + 1, nc + 1))
+        m.close()
+    with pytest.warns(UserWarning, match=r'Nc = 10 points over tau_adv = 0\.003, fewer than the 15'):
+        coarse = Rijke(tau=3e-3, Nc=10)
+    assert coarse.Nc == 10
+    r = Rijke()
+    with pytest.raises(ValueError, match=r'needs Nc >= 15 points on the delay line; the model has Nc = 10'):
+        r.reset_model(tau=3e-3)
+    assert (r.tau, r.tau_adv, r.Nc, r.alpha_lims['tau']) == (1.5e-3, 1.5e-3, 10, (1e-6, 1.5e-3))
+    wide = Rijke(Nc=15)
+    wide.reset_model(tau=3e-3)
+    assert (wide.tau_adv, wide.Nc) == (3e-3, 15)
+    for model in (coarse, r, wide):
+        model.close()
+
+
+def test_rijke_delay_line_converges():
+    """At tau = 3e-3, the line of the default rule (Nc = 15) gives the statistics of a fine line (Nc = 40): the RMS of
+    the acoustic modes over 0.3-0.6 s agrees within 2% (with Nc = 10, it is 20% off)."""
+    def rms(**kwargs):
+        m = Rijke(**kwargs)
+        m.t_transient = 0.
+        eta = m.time_integrate(Nt=6000)[0][3000:, :m.Nm]
+        m.close()
+        return np.sqrt(np.mean(eta ** 2))
+    default, fine = rms(tau=3e-3), rms(tau=3e-3, Nc=40)
+    assert abs(default - fine) / fine < 0.02
+
+
+def test_rijke_estimates_tau_with_more_than_50_points():
+    """An estimated tau spans 1e-2 with at least 50 points: a model with more keeps them."""
+    model = Rijke(Nc=60)
+    model.t_transient = 1e-3
+    model.init_ensemble(m=3, std_alpha={'tau': (1e-3, 2e-3)})
+    assert (model.Nc, model.tau_adv, model.Nphi, model.psi0.shape) == (60, 1e-2, 80, (80, 1))
+    assert np.all(np.isfinite(model.time_integrate(Nt=5)[0]))
+    model.close()
+
+
+def test_rijke_derives_its_tube_from_the_keywords():
+    """Nm, Nc, Nq, xf and L size the modes, the delay line and the microphones, and place the flame."""
+    m = Rijke(Nm=5, Nc=20, Nq=3, xf=0.3, L=2.)
+    assert (m.Nphi, m.Dc.shape, m.gc.shape) == (2 * 5 + 20, (21, 21), (21,))
+    np.testing.assert_allclose(m.jpiL, np.arange(1, 6) * np.pi / 2.)
+    np.testing.assert_allclose(m.sinomjxf, np.sin(m.jpiL * 0.3))
+    np.testing.assert_allclose(m.x_mic, [0.3, 0.3 + 1.7 / 3, 0.3 + 3.4 / 3])
+    assert m.meanFlow['u'] == 0.15 * 10 + 0.85 * 11.1643
+    psi, t = m.time_integrate(Nt=20)
+    m.update_history(psi, t)
+    assert np.all(np.isfinite(psi)) and m.get_observables().shape == (3, 1) and m.M.shape == (3, m.N)
+    m.close()
+
+
+def test_rijke_xf_keys_the_filename_and_the_respawn():
+    """xf changes the dynamics, so it enters the filename, which keys the caches of create_dataset and of the truth of
+    romda. A model rebuilt from alpha0 and fixed_params, as ntsa.respawn rebuilds it, keeps xf and its microphones."""
+    default, moved = Rijke(), Rijke(xf=0.3)
+    assert default.filename == 'Rijke_default' and moved.filename == 'Rijke_default_xf0.3'
+    respawned = Rijke(psi0=moved.psi0[:, 0], dt=moved.dt,
+                      **{**moved.alpha0, **{key: getattr(moved, key) for key in moved.fixed_params}})
+    assert respawned.xf == 0.3 and respawned.filename == moved.filename
+    np.testing.assert_array_equal(respawned.x_mic, moved.x_mic)
+    for model in (moved, respawned):
+        psi, t = model.time_integrate(Nt=20)
+        model.update_history(psi, t)
+    np.testing.assert_array_equal(respawned.get_observable_hist(), moved.get_observable_hist())
+    for model in (default, moved, respawned):
+        model.close()
+
+
+def test_rijke_length_keys_the_filename_apart_from_dynamodels_0_6_0(tmp_path):
+    """dynamodels 0.6.0 wrote a length L != 1 as '_L{L}' in the filename, but built the modes and the mean flow from
+    L = 1, so the datasets that it cached under those names hold other dynamics. The label Ltube keeps create_dataset
+    from loading them; the names of the default length do not change."""
+    from dynamodels.utils import create_dataset, save_to_mat_file
+    long = Rijke(L=1.2)
+    assert long.filename == 'Rijke_default_Ltube1.2' and Rijke().filename == 'Rijke_default'
+    assert Rijke(L=1.2, xf=0.3, beta=3.).filename == 'Rijke_beta3.0_Ltube1.2_xf0.3'
+    stale = dict(clean_data=np.zeros((5, long.Nphi)), noisy_data=np.zeros((5, long.Nphi)), t=np.arange(5.), N_lyap=200)
+    save_to_mat_file(str(tmp_path / 'Rijke_default_L1.2_Nlyap1_noise0.02_seed0'), stale)     # as 0.6.0 named it
+    data, path = create_dataset(Rijke, str(tmp_path), num_lyap_times=1, L=1.2)
+    assert path.endswith('Rijke_default_Ltube1.2_Nlyap1_noise0.02_seed0') and np.abs(data['clean_data']).max() > 0
+    long.close()
+
+
+def test_rijke_tau_adv_keyword():
+    """A tau_adv keyword spans the delay line if it is longer than tau, and gives way to a longer tau, as when
+    ntsa.respawn carries the tau_adv of a model into a sweep over tau. reset_model keeps it, as the constructor does."""
+    long = Rijke(tau=1e-3, tau_adv=1e-2, Nc=50)
+    assert long.tau_adv == long.governing_eqns_params['tau_adv'] == 1e-2
+    long.reset_model(tau=2e-3)
+    fresh = Rijke(tau=2e-3, tau_adv=1e-2, Nc=50)
+    assert long.tau_adv == fresh.tau_adv == long.governing_eqns_params['tau_adv'] == 1e-2
+    assert long.alpha_lims['tau'] == (1e-6, 1e-2)
+    assert np.array_equal(long.time_integrate(Nt=20)[0], fresh.time_integrate(Nt=20)[0])
+    swept = Rijke(tau=2e-3, tau_adv=Rijke.tau)
+    assert swept.tau_adv == swept.governing_eqns_params['tau_adv'] == 2e-3
+    assert np.all(np.isfinite(swept.time_integrate(Nt=20)[0]))
+    for model in (long, fresh, swept):
+        model.close()
+
+
+def test_rijke_estimated_tau_longer_than_the_delay_line_raises():
+    """The delay line of an estimated tau spans 1e-2: a longer tau raises at init_ensemble, not at the forecast."""
+    model = Rijke(tau=2e-2)
+    with pytest.raises(ValueError, match=r'tau_adv = 0\.01 \(Nc = 50\), shorter than tau = 0\.02'):
+        model.init_ensemble(m=3, est_alpha=['tau'])
+    assert (model.Nc, model.tau_adv, model.ensemble_cfg, model.hist.shape) == (100, 2e-2, False, (1, 120, 1))
+    model.close()
+
+
+def test_rijke_estimates_tau_after_an_ensemble_that_estimates_beta():
+    """Estimating tau lengthens the delay line of the state rows only: the parameter row of a previous ensemble stays
+    out of the new initial state, psi0, which keeps Nphi rows."""
+    model = Rijke()
+    model.t_transient = 1e-3
+    model.init_ensemble(m=3, std_alpha={'beta': (3.5, 4.5)})
+    state = model.current_state[:30].mean(axis=1)
+    model.init_ensemble(m=3, std_alpha={'tau': (1e-3, 2e-3)})
+    assert model.psi0.shape == (70, 1) == (model.Nphi, 1) and model.hist.shape == (1, 71, 3)
+    np.testing.assert_allclose(model.psi0[:30, 0], state)
+    assert not model.psi0[30:].any()
+    model.init_ensemble(m=3, std_alpha={'tau': (1e-3, 2e-3)})
+    assert model.psi0.shape == (70, 1) and model.hist.shape == (1, 71, 3)
+    model.close()
+
+
 def test_ks2d_estimable_nus():
     # nu1/nu2 are estimable params with bounds; per-member alphas get their own
     # ETDRK4 operators, matching independent single-nu runs from the same IC
@@ -136,6 +287,47 @@ def test_pickle_drops_live_pool():
     m2.close()
 
 
+@pytest.mark.parametrize('m, averaged', [(1, False), (4, False), (4, True)])
+def test_ks_pickle_roundtrip(m, averaged):
+    # KS caches its nonlinear operator, a bound method, in ETDRK4_f_terms. pickle rebuilds a
+    # bound method as getattr(obj, func.__name__), which a name-mangled (double underscore)
+    # method does not resolve, so unpickling raised AttributeError (copy() rebinds by object).
+    import pickle
+
+    model = KS(Nx=64, seed=1, initial_amplitude=1.)
+    if m > 1:
+        model.init_ensemble(m=m, std_phi=0.01)
+    psi, t = model.time_integrate(Nt=20)
+    model.update_history(psi, t)
+    clone = pickle.loads(pickle.dumps(model))
+    assert clone.m == m
+    np.testing.assert_array_equal(clone.hist, model.hist)
+    np.testing.assert_array_equal(clone.hist_t, model.hist_t)
+    # the cached operator must act on the clone, not on the pickled original
+    assert clone.ETDRK4_f_terms['nonlinear_operator'].__self__ is clone
+    pa, ta = model.time_integrate(Nt=50, averaged=averaged)
+    pb, tb = clone.time_integrate(Nt=50, averaged=averaged)
+    np.testing.assert_array_equal(pb, pa)
+    np.testing.assert_array_equal(tb, ta)
+
+
+def test_ks_pickle_of_dynamodels_0_6_0_loads():
+    """dynamodels 0.6.0 cached the nonlinear operator of KS as a bound method named '__nonlinear_operator', which pickle
+    rebuilds with getattr(model, '__nonlinear_operator'): an alias of the method resolves it."""
+    import pickle
+    import types
+
+    model = KS(Nx=32, seed=1, initial_amplitude=1.)
+    model.time_integrate(Nt=2)          # caches the operator
+    terms = model.ETDRK4_f_terms
+    old = types.FunctionType(KS._nonlinear_operator.__code__, KS._nonlinear_operator.__globals__,
+                             '__nonlinear_operator')
+    terms['nonlinear_operator'] = types.MethodType(old, model)      # as 0.6.0 cached it
+    clone = pickle.loads(pickle.dumps(model))
+    assert clone.ETDRK4_f_terms['nonlinear_operator'].__self__ is clone
+    np.testing.assert_array_equal(clone.time_integrate(Nt=5)[0], model.time_integrate(Nt=5)[0])
+
+
 def test_create_dataset(tmp_path):
     from dynamodels.utils import create_dataset
     data, path = create_dataset(Lorenz63, str(tmp_path), num_lyap_times=2, seed=1)
@@ -150,6 +342,10 @@ def test_create_dataset(tmp_path):
     # Nx must key the cache: a different structural size gets its own file
     d10, p10 = create_dataset(Lorenz96, str(tmp_path), num_lyap_times=2, Nx=10)
     assert p10 != path and d10['clean_data'].shape[1] == 10
+    # xf changes the dynamics of Rijke without changing its size: it must key the cache too
+    d02, p02 = create_dataset(Rijke, str(tmp_path), num_lyap_times=1)
+    d03, p03 = create_dataset(Rijke, str(tmp_path), num_lyap_times=1, xf=0.3)
+    assert p03 != p02 and not np.allclose(d03['clean_data'], d02['clean_data'])
 
 
 def test_ks_etdrk4_matches_reference_integration():

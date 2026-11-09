@@ -4,7 +4,7 @@ from scipy.interpolate import splev, splrep
 
 from ..integrator import IVPIntegrator
 from ..model import Model
-from ..utils import Cheb, normalized_time
+from ..utils import Cheb, _warn, normalized_time
 
 # Dominant Lyapunov exponent lambda1(beta), measured with dev/NTSA (perturbation
 # growth, n_pert=4, saturation-at-attractor-scale verified; 2026-08-05) at the
@@ -75,7 +75,19 @@ class Rijke(Model):
 
     The delay $\tau$ is realized by advecting $u'(x_f, t)$ along an auxiliary
     field discretized with $N_c$ Chebyshev collocation points, and interpolating
-    it at the point corresponding to the elapsed delay to obtain $u_f(t)$.
+    it at the point corresponding to the elapsed delay to obtain $u_f(t)$. The
+    field spans the advection time $\tau_\mathrm{adv} = \max(\tau, 1.5 \times
+    10^{-3})$, i.e. the delay, or the default delay if $\tau$ is shorter. A
+    ``tau_adv`` keyword replaces the default delay in this formula. Unless
+    ``Nc`` (or ``psi0``) is given, the field has
+    $N_c = \max(10, \lceil 5000\,\tau_\mathrm{adv} \rceil)$ points, i.e. at
+    least 5000 points per second of delay: with $N_c = 10$, a delay of
+    $3 \times 10^{-3}$ changes the RMS of the acoustic modes by 20%. A coarser
+    ``Nc`` warns, and `reset_model` refuses a delay that the line of the
+    model cannot resolve. If $\tau$ is estimated (`init_ensemble`), the field
+    spans $\tau_\mathrm{adv} = 10^{-2}$ with $N_c = 50$ points (or the larger
+    ``Nc`` of the model), which holds the delay of every member up to
+    $10^{-2}$; `init_ensemble` raises a `ValueError` if $\tau > 10^{-2}$.
 
     The estimable parameters are $\beta$, $\tau$, the damping coefficients $C_1$,
     $C_2$, and $\kappa$ (only active for ``law='tan'``). The observables are the
@@ -100,6 +112,7 @@ class Rijke(Model):
     Nm = 10
     Nc = 10
     Nq = 6
+    DELAY_LINE_DENSITY = 5000.    # Chebyshev points of the delay line per second of tau_adv (Nc = 50 over 1e-2)
 
     beta, tau = 4.0, 1.5E-3
     C1, C2 = 0.05, 0.01
@@ -109,10 +122,15 @@ class Rijke(Model):
 
     # --- Parameter and fixed parameter lists ---
     params = ['beta', 'tau', 'C1', 'C2', 'kappa']
+    # xf enters the dynamics through cosomjxf, sinomjxf and meanFlow; as a fixed parameter, it enters the filename and
+    # ntsa.respawn carries it, so that a respawned model places its microphones (x_mic) at the same xf
     fixed_params = ['cosomjxf', 'Dc', 'gc', 'jpiL', 'L',
-                    'law', 'meanFlow', 'Nc', 'Nm', 'tau_adv', 'sinomjxf']
+                    'law', 'meanFlow', 'Nc', 'Nm', 'tau_adv', 'sinomjxf', 'xf']
 
     extra_print_params = ['law', 'Nm', 'Nc', 'xf', 'L']
+    # dynamodels 0.6.0 wrote a length L != 1 as '_L{L}' in the filename, but derived the modes (jpiL, sinomjxf) and
+    # the mean flow from L = 1: a new label keeps the datasets that it cached under those names from being loaded
+    filename_labels = {'L': 'Ltube'}
 
     def __init__(self, **model_dict):
 
@@ -123,20 +141,27 @@ class Rijke(Model):
             for key, val in CASES[case].items():
                 model_dict.setdefault(key, val)  # explicit kwargs win over the case
 
+        # The quantities derived below read these keywords, so they are set first (Model.__init__ sets the others)
+        for key in ('Nm', 'Nc', 'Nq', 'xf', 'L', 'tau'):
+            if key in model_dict:
+                setattr(self, key, model_dict[key])
+
+        # The delay line spans the delay tau, or a longer tau_adv given as a keyword (ntsa.respawn passes tau_adv), or
+        # else the default delay if tau is shorter. Model.__init__ does not set tau_adv again from the keyword.
+        self._tau_adv_given = model_dict.pop('tau_adv', None)
+        self.tau_adv = self._delay_line_span(self.tau, self._tau_adv_given)
+        # a longer span needs more points: Nc grows with tau_adv unless the user sizes the line (Nc, or psi0)
+        needed = self._delay_line_points(self.tau_adv)
+        if 'Nc' not in model_dict and 'psi0' not in model_dict:
+            self.Nc = max(self.Nc, needed)
+        elif self.Nc < needed:
+            _warn(f'{type(self).__name__}: the delay line has Nc = {self.Nc} points over tau_adv = {self.tau_adv:g}, '
+                  f'fewer than the {needed} that resolve it ({self.DELAY_LINE_DENSITY:g} per second); pass Nc={needed}.')
+
         if 'psi0' not in model_dict.keys():
-            if 'Nm' in model_dict.keys():
-                Nm = model_dict['Nm']
-            else:
-                Nm = self.Nm
-            if 'Nc' in model_dict.keys():
-                Nc = model_dict['Nc']
-            else:
-                Nc = self.Nc
-            model_dict['psi0'] = .05 * np.hstack([np.ones(2 * Nm), np.zeros(Nc)])
+            model_dict['psi0'] = .05 * np.hstack([np.ones(2 * self.Nm), np.zeros(self.Nc)])
 
         dt = model_dict.pop('dt', 1E-4)
-
-        self.tau_adv = self.tau
 
 
         self.alpha_labels = dict(beta='$\\beta$', tau='$\\tau$', C1='$C_1$', C2='$C_2$', kappa='$\\kappa$')
@@ -166,7 +191,7 @@ class Rijke(Model):
 
         super().__init__(dt=dt, integrator_class=IVPIntegrator, **model_dict)
 
-        # measured 1/lambda1 at this beta (set once: params change by re-instantiation)
+        # measured 1/lambda1 at this beta (reset_model derives it again for a new beta)
         self.t_lyap = self.t_lyap_from_table(self.beta, _LAM1_MEASURED, Rijke.t_lyap)
 
         # Wave input_parameters ############################################################################################
@@ -176,18 +201,51 @@ class Rijke(Model):
         # Q_bar: 5000     R_gas: 287.1000     gamma: 1.4000
         ##############################################################################################################
 
+    @classmethod
+    def _delay_line_span(cls, tau, tau_adv=None):
+        """float: Advection time `tau_adv` of the delay line for a delay `tau` that is not estimated: the delay
+        itself, or a longer span, which is the `tau_adv` keyword of the constructor if given, else the default delay.
+        A `tau_adv` keyword shorter than `tau` gives way to `tau`: the forecast fails if `tau_adv` < `tau`."""
+        return max(tau, cls.tau if tau_adv is None else tau_adv)
+
+    @classmethod
+    def _delay_line_points(cls, tau_adv):
+        """int: Chebyshev points that resolve a delay line spanning `tau_adv`: DELAY_LINE_DENSITY per second of
+        delay, and no fewer than the class default Nc."""
+        return max(cls.Nc, int(np.ceil(round(cls.DELAY_LINE_DENSITY * tau_adv, 6))))
+
+    def reset_derived(self, dt, **overrides):
+        """See `Model.reset_derived`. Rijke derives the Lyapunov time `t_lyap` again from `beta` and, for a new
+        `tau`, the span `tau_adv` of the delay line, as the constructor does, with the `tau_adv` keyword of the
+        constructor if one was given."""
+        self.t_lyap = self.t_lyap_from_table(self.beta, _LAM1_MEASURED, Rijke.t_lyap)
+        if 'tau' in overrides:  # reset_model rejects an estimated tau, whose line spans 1e-2 (modify_settings)
+            tau_adv = self._delay_line_span(self.tau, getattr(self, '_tau_adv_given', None))
+            if self._delay_line_points(tau_adv) > self.Nc:   # the state keeps its Nc rows: a new model is needed
+                raise ValueError(f'{type(self).__name__}: a delay tau = {self.tau:g} spans tau_adv = {tau_adv:g}, which '
+                                 f'needs Nc >= {self._delay_line_points(tau_adv)} points on the delay line; the model '
+                                 f'has Nc = {self.Nc}. Build a new model, {type(self).__name__}(tau={self.tau:g}).')
+            self.tau_adv = tau_adv
+            self._alpha_lims = {**self.alpha_lims, 'tau': (1E-6, self.tau_adv)}  # new: a failed reset restores the old
+            self.set_fixed_params()
+
     def modify_settings(self):
         if 'tau' in self.est_alpha:
-            extra_Nc = 50 - self.Nc
-            self.tau_adv, self.Nc = 1E-2, 50
-            self.alpha_lims = dict(tau=(1E-6, self.tau_adv)) # this updates the limits for tau to reflect the new tau_adv value
+            if self.tau > 1E-2:
+                raise ValueError(f'{type(self).__name__}: an estimated tau is held by a delay line that spans '
+                                 f'tau_adv = 0.01 (Nc = 50), shorter than tau = {self.tau}.')
+            extra_Nc = max(0, 50 - self.Nc)                  # a model with more than 50 points keeps them
+            self.tau_adv, self.Nc = 1E-2, self.Nc + extra_Nc
+            # the limits for tau follow tau_adv; a new dict, so that a failed init_ensemble restores the old one
+            self._alpha_lims = {**self.alpha_lims, 'tau': (1E-6, self.tau_adv)}
 
-            psi = self.current_state
+            psi = self.current_state[:self.Nphi]    # the state, without the parameter rows of a previous ensemble
 
             new_psi = np.concatenate([psi,
                                       np.zeros((extra_Nc, psi.shape[-1]))], axis=0)
 
-            self.psi0 = np.mean(new_psi, axis=1, keepdims=True)
+            # the internal re-assignment bypasses the setter, which warns the user against re-assigning psi0
+            self._psi0 = np.mean(new_psi, axis=1, keepdims=True)
 
             self.Dc, self.gc = Cheb(self.Nc, getg=True)
 
@@ -229,7 +287,7 @@ class Rijke(Model):
     @staticmethod
     def time_derivative(t, psi,
                         C1, C2, beta, kappa, tau,
-                        cosomjxf, Dc, gc, jpiL, L, law, meanFlow, Nc, Nm, tau_adv, sinomjxf):
+                        cosomjxf, Dc, gc, jpiL, L, law, meanFlow, Nc, Nm, tau_adv, sinomjxf, xf=None):
         r"""Time derivative of the Rijke tube governing equations (see class docstring).
 
         Parameters
@@ -269,6 +327,10 @@ class Rijke(Model):
             Number of Galerkin modes.
         tau_adv : float
             Reference advection time spanned by the delay line.
+        xf : float, optional
+            Flame location. Not used here: it enters through `cosomjxf`,
+            `sinomjxf` and `meanFlow`, which the constructor derives from it.
+            It is a fixed parameter so that it enters the `filename`.
 
         Returns
         -------
