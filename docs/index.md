@@ -9,7 +9,7 @@ A `Model` couples a governing equation to a pre-allocated state history and a pl
 - `get_observable_hist()` returns what a sensor would measure, and
 - `visualize_history()` plots both. 
 
-![The Model class: a HistoryTracker, an Integrator and an observation operator](img/model_structure.svg)
+<img class="model-figure" src="img/model_structure.svg" alt="The Model class: a HistoryTracker, an Integrator and an observation operator">
 
 The package itself depends only on numpy, scipy, matplotlib and typeguard.
 
