@@ -2,12 +2,53 @@
 
 import inspect
 import os
+import sys
+import warnings
 from collections.abc import Sequence
+from functools import partialmethod
 
 import numpy as np
 import scipy.io as sio
 from numpy.typing import NDArray
 from scipy.interpolate import interp1d
+
+# Frames of files in the package directory (dynamodels and dynamodels.physical) are internal to dynamodels.
+_PACKAGE_PREFIX = os.path.dirname(__file__) + os.sep
+_HAS_SKIP_FILE_PREFIXES = sys.version_info >= (3, 12)  # warnings.warn(skip_file_prefixes=...) exists from Python 3.12
+
+
+def _warn(message: str, category: type[Warning] = UserWarning) -> None:
+    """Issue a warning attributed to the first frame outside dynamodels.
+
+    That frame is the line of the call or, for a call through a subclass or a wrapper defined outside dynamodels, the
+    line of that subclass or wrapper. A fixed ``stacklevel`` cannot reach it, because the number of dynamodels frames
+    in between varies: ``Lorenz63(sigam=5.)`` passes through two, `Lorenz63.__init__` and `Model.__init__`, whereas
+    ``model.psi0 = psi`` passes through one, the setter of `psi0`. Python shows a warning once per location by
+    default, so a location inside dynamodels would also merge the warnings of all callers into one. The decorator
+    ``@typechecked`` of `Model.__init__` adds no frame: typeguard 3 and later instrument the function in place,
+    whereas typeguard 2 wrapped it in a function of its own.
+    """
+    if _HAS_SKIP_FILE_PREFIXES:
+        warnings.warn(message, category, stacklevel=2, skip_file_prefixes=(_PACKAGE_PREFIX,))
+        return
+    frame, level = sys._getframe(1), 2  # the caller of _warn is stacklevel 2
+    while frame is not None and frame.f_code.co_filename.startswith(_PACKAGE_PREFIX):
+        frame, level = frame.f_back, level + 1
+    warnings.warn(message, category, stacklevel=level if frame is not None else 2)
+
+
+def _is_method(cls: type, name: str) -> bool:
+    """Whether the class attribute `name` of `cls` (or of a base class) is a method rather than a value.
+
+    A method is a staticmethod, a classmethod, a partialmethod or a callable that binds to the instance, e.g. a
+    function defined in the class body. A value may be callable too, e.g. a ufunc, a class or a builtin function held
+    by a class attribute: it does not bind, and a keyword of the model may set it, whereas a keyword that named a
+    method would replace the method.
+    """
+    attr = inspect.getattr_static(cls, name, None)
+    if isinstance(attr, (staticmethod, classmethod, partialmethod)):
+        return True
+    return callable(attr) and hasattr(type(attr), '__get__')
 
 
 def allowed_kwargs_for_func(func, kwargs):

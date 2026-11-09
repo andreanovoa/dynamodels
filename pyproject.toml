@@ -24,7 +24,7 @@ dependencies = [
     "multiprocess>=0.70",
     "numpy>=2.0,<3.0",
     "scipy>=1.13,<2.0",
-    "typeguard",
+    "typeguard>=3",  # 2.x wraps @typechecked functions, so the warnings of dynamodels pointed at typeguard
 ]
 
 [project.optional-dependencies]

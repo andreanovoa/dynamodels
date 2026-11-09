@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import warnings
+from contextlib import contextmanager
 from copy import deepcopy
 
 import matplotlib.pyplot as plt
@@ -10,6 +10,8 @@ from typeguard import typechecked
 from .history import HistoryTracker
 from .integrator import Integrator, IVPIntegrator
 from .utils import (
+    _is_method,
+    _warn,
     allowed_kwargs_for_func,
     mean_vector_to_ensemble,
     normalized_alpha,
@@ -52,7 +54,11 @@ class Model:
     integrator_class : type[Integrator]
         Time-integration strategy (default `IVPIntegrator`).
     **kwargs
-        Model-parameter overrides (any attribute defined by the child class).
+        Model-parameter overrides (any attribute defined by the child class). A keyword that is not an
+        attribute of the model, or that names a method (e.g. `copy`), is ignored with a `UserWarning`. A
+        class attribute that holds a callable value, e.g. a ufunc or a class, is not a method, and a keyword
+        sets it. The warning points at the first line outside dynamodels: the line of the call or, for a call
+        through a subclass or a wrapper defined outside dynamodels, the line of that subclass or wrapper.
 
     Attributes
     ----------
@@ -75,8 +81,9 @@ class Model:
     Nq : int
         Number of observable components; declared by child classes (default 1).
     alpha : dict or None
-        Copy of `alpha0` taken at construction; not updated automatically as
-        parameters evolve (use `get_alpha` for per-member current values).
+        Copy of `alpha0` taken at construction (and by `reset_model`); not
+        updated automatically as parameters evolve (use `get_alpha` for
+        per-member current values).
     initialized : bool
         Set to True once `__init__` has completed.
     results_folder : str or None
@@ -107,12 +114,16 @@ class Model:
                  **kwargs):
 
         # ================= INITIALISE PHYSICAL MODEL ================== ##
-        keys = list(kwargs.keys())
-        [setattr(self, key, kwargs.pop(key)) for key in keys if hasattr(self, key)]
+        # A keyword that names a method would replace it; a callable value (e.g. a ufunc) is not a method (_is_method)
+        methods = sorted(key for key in kwargs if hasattr(self, key) and _is_method(type(self), key))
+        for key in [key for key in kwargs if hasattr(self, key) and key not in methods]:
+            setattr(self, key, kwargs.pop(key))
 
-        if len(kwargs.keys()) > 1:
-            warnings.warn(f'{type(self).__name__}: keyword(s) {sorted(kwargs)} are not attributes of the model '
-                          'and are ignored', stacklevel=2)
+        if methods:
+            _warn(f'{type(self).__name__}: keyword(s) {methods} name methods of the model and are ignored')
+        unknown = sorted(set(kwargs) - set(methods))
+        if unknown:
+            _warn(f'{type(self).__name__}: keyword(s) {unknown} are not attributes of the model and are ignored')
 
         # ====================== SET INITIAL CONDITIONS ====================== ##
 
@@ -232,13 +243,11 @@ class Model:
             `value` keep (or default to) ``(None, None)``.
         """
         assert set(value.keys()) - set(self.params) == set(), f"Keys of alpha_lims must be a subset of {self.params}, but got {value.keys()}"
+        # A new dict, not an update in place: a failed init_ensemble or reset_model restores the previous one
         if hasattr(self, '_alpha_lims'):
-            self._alpha_lims.update(value)
+            self._alpha_lims = {**self._alpha_lims, **value}
         else:
-            self._alpha_lims = value
-            if len(self._alpha_lims) < len(self.params):
-                missing_keys = set(self.params) - set(self._alpha_lims.keys())
-                self._alpha_lims.update({key: (None, None) for key in missing_keys})
+            self._alpha_lims = {**value, **{key: (None, None) for key in self.params if key not in value}}
 
 
     @property
@@ -266,13 +275,12 @@ class Model:
             `value` are back-filled with an auto-generated LaTeX label.
         """
         assert set(list(value.keys())) - set(sorted(self.params)) == set(), f"Keys of alpha_labels must be a subset of {sorted(self.params)}, but got {value.keys()}"
+        # A new dict, not an update in place: a failed init_ensemble or reset_model restores the previous one
         if hasattr(self, '_alpha_labels'):
-            self._alpha_labels.update(value)
+            self._alpha_labels = {**self._alpha_labels, **value}
         else:
-            self._alpha_labels = value
-            if len(self._alpha_labels) < len(self.params):
-                missing_keys = set(sorted(self.params)) - set(self._alpha_labels.keys())
-                self._alpha_labels.update({val: f'$\\alpha_{ii}$' for ii, val in enumerate(missing_keys)})
+            missing_keys = [key for key in sorted(self.params) if key not in value]
+            self._alpha_labels = {**value, **{val: f'$\\alpha_{ii}$' for ii, val in enumerate(missing_keys)}}
 
 
     @property
@@ -376,11 +384,12 @@ class Model:
 
     @property
     def psi0(self):
-        r"""ndarray: Initial state/ensemble passed at construction, shape
-        $(N_\phi, m)$ (see the `psi0` constructor parameter).
+        r"""ndarray: Initial state/ensemble passed at construction, or to
+        `reset_model`, shape $(N_\phi, m)$ (see the `psi0` constructor
+        parameter).
 
         Re-assigning `psi0` after construction is unusual and emits a
-        `UserWarning`.
+        `UserWarning`; `reset_model` restarts the model from a new `psi0`.
         """
         return self._psi0
 
@@ -388,8 +397,8 @@ class Model:
     def psi0(self, value):
         """Re-assign `psi0` (emits `UserWarning`; not generally recommended)."""
         if hasattr(self, '_psi0'):
-            warnings.warn(f"psi0 is being re-assigned. Previous shape {self._psi0.shape},"
-                          f" new shape {np.array(value).shape}. This is not recommended.", UserWarning)
+            _warn(f"psi0 is being re-assigned. Previous shape {self._psi0.shape},"
+                  f" new shape {np.array(value).shape}. This is not recommended.")
 
             if isinstance(value, np.ndarray) and value.ndim == 1:
                 value = np.array([value]).T
@@ -401,13 +410,15 @@ class Model:
     def alpha0(self):
         """dict: Initial parameter values ``{name: value}``, one entry per name
         in `params`, captured at construction time and never mutated afterwards.
+        `reset_model` captures them again, with the parameters it overrides.
         """
         return self._alpha0
 
     @alpha0.setter
     def alpha0(self, dict_params):
-        """Set `alpha0`. Read-only after construction — raises `AttributeError`
-        if called again.
+        """Set `alpha0`. Read-only after construction: raises `AttributeError`
+        if called again. `reset_model` captures a new `alpha0` (a new dict; a
+        reference to the previous one keeps the previous values).
         """
         if hasattr(self, '_alpha0'):
             raise AttributeError("alpha0 is read-only and cannot be modified after initialization.")
@@ -508,6 +519,9 @@ class Model:
         """Integrate the model forward and append the result to `history`.
 
         Useful e.g. to run a model onto its attractor before further use.
+        After storing the run, it closes the integrator (`close`), which
+        releases the pool of an ensemble; the next forecast of the ensemble
+        with ``averaged=False`` starts a new pool.
 
         Parameters
         ----------
@@ -548,7 +562,12 @@ class Model:
 
 
     def copy(self):
-        """Model: A deep copy of this model (`copy.deepcopy`)."""
+        """Model: A deep copy of this model (`copy.deepcopy`).
+
+        Copying closes the pool of an `IVPIntegrator` ensemble; the next
+        forecast with ``averaged=False`` of each model, the original and the
+        copy, starts its own pool.
+        """
         return deepcopy(self)
 
 
@@ -670,25 +689,154 @@ class Model:
 
     # ------------------------- Functions for update/initialise the model --------------------------- #
 
+    @contextmanager
+    def _rollback(self):
+        """Context in which an error restores the attributes of this model and of its history, then propagates.
+
+        The restore puts back the objects that the attributes held, not the contents of an object changed in place.
+        """
+        attrs, history = dict(vars(self)), self.history
+        history_attrs = dict(vars(history))
+        try:
+            yield
+        except BaseException:
+            vars(self).clear()
+            vars(self).update(attrs)
+            vars(history).clear()
+            vars(history).update(history_attrs)
+            raise
+
+
     def reset_model(self, psi0=None, **kwargs):
-        """Re-initialise this model in place via `Model.__init__`.
+        r"""Re-initialize this model in place, and restart its history at $t = 0$ from `psi0`.
+
+        `Model.__init__` runs again on this model, so `psi0`, `alpha0` and
+        `alpha` are captured afresh. The time step `dt` and the parameters in
+        `params` keep their values unless they are overridden. The model gets
+        a new integrator of the same class, to which an `IVPIntegrator` passes
+        its `method` and `max_steps`; other attributes set on the old
+        integrator are not carried over. An ensemble keeps the configuration
+        of `init_ensemble`: the number of members `m`, the estimated
+        parameters `est_alpha` and the observation operator `M`.
+        `reset_derived` then derives again the
+        quantities that the constructor of a subclass derives from `dt` or
+        from a parameter, e.g. the ETDRK4 coefficients of `KS` and the
+        Lyapunov time `t_lyap` of `Lorenz63`. If a parameter changes, a cached
+        `filename` is derived again from the new parameters. This replaces a
+        filename set by the user, e.g. ``model.filename = 'my_run'``, which
+        must be set again after the reset to be kept.
+
+        The reset is atomic. A reset that fails, at any step and with any
+        error, leaves the model as it was, with its integrator and the
+        multiprocessing pool of its integrator. Only a reset that succeeds
+        releases the pool of the old integrator. This covers the steps of
+        `reset_model` itself, `reset_derived` included, but not code that a
+        subclass runs after ``super().reset_model(...)`` returns in an
+        override of `reset_model`: such a subclass derives its quantities in
+        `reset_derived` instead.
 
         Parameters
         ----------
-        psi0 : ndarray, optional
-            New initial state; defaults to `current_state`.
+        psi0 : array_like, optional
+            Initial state, shape $(N_\phi,)$, $(N_\phi, m)$ or
+            $(N_\phi + N_\alpha, m)$; defaults to `current_state`. With
+            $N_\phi$ rows, the estimated parameters keep their current values.
+            An ensemble needs $m$ columns.
         **kwargs
-            Forwarded to `Model.__init__` (e.g. `dt`, parameter overrides).
-        """
-        if psi0 is None:
-            psi0 = self.current_state
+            New values of `dt` and of the parameters in `params`, e.g.
+            ``model.reset_model(dt=0.01, rho=35.)``. The rows of `psi0` set
+            the parameters in `est_alpha`.
 
-        Model.__init__(self, psi0=psi0, **kwargs)
+        Raises
+        ------
+        ValueError
+            If a keyword is neither `dt` nor a name in `params` (a structural
+            change, such as a new grid, needs a new model), if a keyword is
+            in `est_alpha`, if `psi0` has the wrong shape, or if ``dt <= 0``.
+        typeguard.TypeCheckError
+            If `dt` is not a float, as in the constructor.
+        TypeError
+            If the model cannot employ the value of a parameter, e.g.
+            ``Lorenz63().reset_model(rho='35')``. As in the constructor, the
+            values of the parameters are not checked: the error is that of
+            the step that fails, and a value from which the model derives
+            nothing fails at the next forecast instead.
+        """
+        unknown = sorted(set(kwargs) - {'dt', *self.params})
+        if unknown:
+            raise ValueError(f'{type(self).__name__}.reset_model can override dt and the parameters {self.params} '
+                             f'only, not {unknown}; construct a new model to change them.')
+        estimated = sorted(set(kwargs) & set(self.est_alpha))
+        if estimated:  # the rows of the state, not alpha0, hold the values of the members
+            raise ValueError(f'{type(self).__name__}.reset_model: {estimated} are estimated (est_alpha); pass the '
+                             'values of the members in the parameter rows of psi0 instead.')
+
+        Nphi, Na = self.Nphi, self.Na
+        psi0 = np.array(self.current_state if psi0 is None else psi0)
+        if psi0.ndim == 1:
+            psi0 = psi0[:, np.newaxis]
+        if psi0.ndim != 2 or psi0.shape[0] not in (Nphi, Nphi + Na):
+            rows = f'{Nphi} rows (the state) or {Nphi + Na} rows (the state and {self.est_alpha})' if Na \
+                else f'{Nphi} rows'
+            raise ValueError(f'{type(self).__name__}.reset_model: psi0 must have {rows}, not shape {psi0.shape}.')
+        if isinstance(self.ensemble_cfg, dict) and psi0.shape[1] != self.m:
+            raise ValueError(f'{type(self).__name__}.reset_model: psi0 has {psi0.shape[1]} member(s), the ensemble '
+                             f'has {self.m}; init_ensemble changes the number of members.')
+        if Na and psi0.shape[0] == Nphi:  # the state alone: the estimated parameters keep their current values
+            psi0 = np.concatenate((psi0, self.current_state[Nphi:]), axis=0)
+
+        dt, old, alpha0_old = kwargs.pop('dt', self.dt), self.integrator, self.alpha0
+        with self._rollback():  # a failure at any step below leaves the model as it was, with the old integrator
+            # Model.__init__ sets psi0 and alpha0 afresh: alpha0 is read-only once set, and re-assigning psi0 warns
+            vars(self).pop('_psi0', None)
+            vars(self).pop('_alpha0', None)
+            Model.__init__(self, psi0=psi0[:Nphi], dt=dt, integrator_class=type(old), **kwargs)
+
+            if Na:  # the history carries the estimated parameters, as after init_ensemble
+                self.update_history(psi=psi0[np.newaxis], t=np.array([0.]), reset=True)
+            for key in ('method', 'max_steps'):  # solver settings of an IVPIntegrator, chosen after construction
+                if key in vars(old):
+                    setattr(self.integrator, key, vars(old)[key])
+            self.reset_derived(dt, **kwargs)
+
+            if '_filename' in vars(self) and any(not np.array_equal(val, alpha0_old.get(key, np.nan))
+                                                 for key, val in self.alpha0.items()):
+                del self._filename  # derived again from the new alpha0, now, so that a value it cannot take fails here
+                suffix = f'_ensemble_m{self.m}' if isinstance(self.ensemble_cfg, dict) else ''
+                self.filename = self.filename + suffix
+        old.close()  # the reset has succeeded: release the pool of the old integrator
+
+
+    def reset_derived(self, dt, **overrides):
+        """Derive again, within `reset_model`, the quantities that the constructor derives from `dt` or from a
+        parameter. No-op by default.
+
+        A subclass whose constructor derives such quantities overrides this method, e.g. `Lorenz63` derives the
+        Lyapunov time `t_lyap` from `rho`, and `KS` derives the ETDRK4 coefficients from `dt`. `reset_model` calls it
+        after `Model.__init__` has set the new values, and before it releases the pool of the old integrator. If it
+        raises, the reset is undone. The undo restores the objects that the attributes of the model held, but not
+        the contents of an object changed in place, so an override assigns new objects to the attributes that it
+        changes.
+
+        Parameters
+        ----------
+        dt : float
+            Time step of the reset, as passed to `Model.__init__` (the new `dt`, or the previous one), before the
+            `dt` setter rounds it.
+        **overrides
+            The parameters that the reset overrides, with their new values.
+        """
 
 
     def modify_settings(self, **kwargs):
         """Hook for child classes to adjust internal configuration after
         `ensemble_cfg` changes (called by `init_ensemble`). No-op by default.
+
+        An override may register parameters, i.e. add names to `params`:
+        `init_ensemble` checks the names to estimate after this hook. If the
+        check fails, `init_ensemble` restores the objects that the attributes
+        of the model held, so an override assigns new objects to the
+        attributes that it changes, rather than changing them in place.
         """
         pass
 
@@ -728,7 +876,7 @@ class Model:
         configured (`ensemble_cfg` is not a dict).
         """
         if not isinstance(self.ensemble_cfg, dict):
-            warnings.warn("Cannot set est_alpha when ensemble is not configured.")
+            _warn("Cannot set est_alpha when ensemble is not configured.")
         else:
             self._ensemble_config['est_alpha'] = value
 
@@ -797,6 +945,20 @@ class Model:
             present in `history`.
         t : ndarray, shape $(N_t,)$
             Time stamps of `psi`.
+
+        Raises
+        ------
+        ValueError
+            With the `IVPIntegrator`, if the initial state of a member is not
+            finite (NaN or inf). The message names the members.
+        RuntimeError
+            With the `IVPIntegrator`, if a member stops before the end of the
+            forecast. The message names the model, the member, the last
+            output time it reached and the reason: the message of
+            `solve_ivp`, a time derivative that is not finite at the initial
+            state, a step that meets a NaN or an inf, or more than
+            `IVPIntegrator.max_steps` solver steps within one output step.
+            The last two typically mean that the state has diverged.
         """
         return self.integrator.advance(Nt=Nt, averaged=averaged, alpha=self.get_alpha())
 
@@ -804,6 +966,23 @@ class Model:
     # ══════════════════════════════════════════════════════════════════════════
     # Ensemble initialisation
     # ══════════════════════════════════════════════════════════════════════════
+
+    def _cannot_estimate(self, names):
+        """list of str: The names, among `names`, that `init_ensemble` cannot estimate (see its Raises section).
+
+        Besides `params`, a name is estimable only if every class that defines it, along the MRO, is defined outside
+        dynamodels (e.g. the spectral radius `rho` of the `EchoStateNetwork` of romda's ESN), and if it is public, not
+        a method and not in `fixed_params`. A name that a dynamodels class defines (`Model` or a model of
+        dynamodels.physical, e.g. `dt` or Rijke's `xf`) is estimable only through `params`.
+        """
+        def defined_outside_dynamodels(key):
+            owners = [cls for cls in type(self).__mro__ if key in vars(cls)]
+            return bool(owners) and all(cls.__module__.split('.')[0] != 'dynamodels' for cls in owners)
+
+        return [key for key in names if key not in self.params and
+                (key.startswith('_') or key in self.fixed_params or not defined_outside_dynamodels(key)
+                 or _is_method(type(self), key))]
+
 
     def init_ensemble(
         self,
@@ -831,7 +1010,7 @@ class Model:
         std_alpha : float or dict
             Std (or {name: std}) for parameter perturbations.
         est_alpha : list[str], optional
-            Names of parameters to augment into the state.
+            Names of parameters to augment into the state, from `params`.
             If empty, and std_alpha is a dict, all parameters in std_alpha are estimated. If empty and std_alpha is not a dict, no parameters are estimated.
         distribution_phi : str
             Sampling distribution for state ("normal" or "uniform").
@@ -842,12 +1021,43 @@ class Model:
         ensemble_psi0 : ndarray (Nphi+Na, m) or (1, Nphi+Na, m), optional
             Pre-built ensemble; bypasses generation if provided.
 
+        Raises
+        ------
+        ValueError
+            If the model cannot estimate a name in `est_alpha`, or a key of a
+            `std_alpha` dict. The names to estimate are those in `params`. A
+            subclass defined outside dynamodels may also estimate a class
+            attribute that it defines itself, which dynamodels does not
+            define, and that its forecast reads for each member, as the ESN of
+            romda estimates the spectral radius `rho` of its echo state
+            network. Any other name raises: a name that is not an attribute of
+            the model (e.g. a misspelt parameter), a method, a structural
+            parameter in `fixed_params` (e.g. ``'nu'`` of `KS`, whose `params`
+            is empty), a private name, or another attribute of a dynamodels
+            model (e.g. `dt`, or ``'xf'`` of `Rijke`). The names are checked
+            after `modify_settings`, which may register parameters.
+
         Notes
         -----
         Does not return a value; the generated (or validated) ensemble is
         written directly to `history` via `update_history(reset=True)`.
-        """
+        The ensemble starts from the mean of the members of the current state
+        after a transient forecast of `t_transient`. In that forecast, the
+        members keep their parameters: those of `alpha0`, or the values in the
+        parameter rows of a previous `init_ensemble`, by the names of that
+        previous `est_alpha`. If the number of members changes, the pool of
+        worker processes of an `IVPIntegrator` closes, and the next forecast
+        with ``averaged=False`` starts a pool for the new members.
 
+        `init_ensemble` is atomic: if it fails, on a name or at a later step
+        (e.g. a `std_alpha` in the wrong format, or a transient forecast that
+        diverges), it leaves the model as it was. As in `reset_model`, the
+        undo restores the objects that the attributes held, so an override
+        of `modify_settings` assigns new objects to the attributes that it
+        changes.
+        """
+        m_old = self.m      # the members of the current state, which the transient forecast below integrates
+        est_old = list(self.est_alpha)  # the names of the parameter rows of the current state, if any
 
         if isinstance(std_alpha, dict):
             est_alpha = sorted(list(std_alpha.keys()))
@@ -858,61 +1068,77 @@ class Model:
             std_alpha = {key: std_alpha[key] for key in est_alpha}
 
 
-        # Push ensemble config so Na, est_alpha properties resolve correctly.
-        self.ensemble_cfg = {'est_alpha': est_alpha.copy(), 'm': m}
+        with self._rollback():  # a failure at any step below leaves the model as it was
+            # Push ensemble config so Na, est_alpha properties resolve correctly.
+            self.ensemble_cfg = {'est_alpha': est_alpha.copy(), 'm': m}
 
-        self.modify_settings()  # Allow child classes to modify settings based on the new ensemble configuration.
+            self.modify_settings()  # Allow child classes to modify settings based on the new ensemble configuration.
 
-        # Invalidate M cache so it is rebuilt with the updated N = Nphi + Na + Nq.
-        if hasattr(self, '_M'):
-            del self._M
+            # Checked after modify_settings, which may register parameters (e.g. the ESN of romda)
+            unknown = self._cannot_estimate(self.est_alpha)
+            if unknown:
+                raise ValueError(f'{type(self).__name__}.init_ensemble cannot estimate {unknown}: est_alpha, or the '
+                                 f'keys of a std_alpha dict, name the parameters of the model, params = '
+                                 f'{list(self.params)}, not other attributes (e.g. dt), methods or structural '
+                                 f'parameters, fixed_params = {list(self.fixed_params)}.')
 
-        if ensemble_psi0 is None:
+            # Invalidate M cache so it is rebuilt with the updated N = Nphi + Na + Nq.
+            if hasattr(self, '_M'):
+                del self._M
 
-            #forecast to avoid initializing before the attractor, which can cause issues for some models (e.g., Lorenz63)
-            Ntransient = int(self.t_transient / self.dt)
-            if Ntransient > 0:
-                psi, t = self.time_integrate(Nt=Ntransient, averaged=False)
-                mean_phi0 = np.mean(psi[-1], axis=-1)
-            else:
-                # no transient (e.g. LinearModel): seed from the current state
-                mean_phi0 = np.mean(self.current_state[:self.Nphi], axis=-1)
+            if ensemble_psi0 is None:
+
+                # forecast to avoid initializing before the attractor, which can cause issues for some models
+                # (e.g., Lorenz63)
+                Ntransient = int(self.t_transient / self.dt)
+                if Ntransient > 0:
+                    # The members keep their parameters: the parameter rows of a previous init_ensemble, if the state
+                    # holds them, are read by the names of that ensemble, not by the new est_alpha
+                    cfg = self.ensemble_cfg
+                    if est_old and self.current_state.shape[0] == self.Nphi + len(est_old):
+                        self.ensemble_cfg = {**cfg, 'est_alpha': est_old}
+                    psi, t = self.time_integrate(Nt=Ntransient, averaged=False)
+                    self.ensemble_cfg = cfg
+                    mean_phi0 = np.mean(psi[-1, :self.Nphi], axis=-1)   # the state, without the parameter rows
+                else:
+                    # no transient (e.g. LinearModel): seed from the current state
+                    mean_phi0 = np.mean(self.current_state[:self.Nphi], axis=-1)
 
 
-            psi0 = mean_vector_to_ensemble(
-                self.rng, mean_phi0, std_phi, m,
-                method=distribution_phi,
-                ensure_mean_at_init=ensure_mean_at_init,
-            )
-
-            if self.est_alpha:
-                mean_a = np.array([getattr(self, a) for a in self.est_alpha])
-
-                # print(f"Generating initial ensemble for parameters {self.est_alpha} with std {std_alpha} and distribution {distribution_alpha}.")
-                # print(f"Parameter means shape: {mean_a.shape}")
-                alpha0 = mean_vector_to_ensemble(
-                    self.rng, mean_a, std_alpha, m,
-                    method=distribution_alpha,
+                psi0 = mean_vector_to_ensemble(
+                    self.rng, mean_phi0, std_phi, m,
+                    method=distribution_phi,
                     ensure_mean_at_init=ensure_mean_at_init,
                 )
-                psi0 = np.concatenate((psi0, alpha0), axis=0)
 
-            ensemble_psi0 = psi0[np.newaxis, :, :]  # (1, Nphi+Na, m)
+                if self.est_alpha:
+                    mean_a = np.array([getattr(self, a) for a in self.est_alpha])
 
-        else:
-            if ensemble_psi0.ndim == 2:
-                ensemble_psi0 = ensemble_psi0[np.newaxis, :, :]
-            assert ensemble_psi0.shape[-1] == m, (
-                f"ensemble_psi0 has {ensemble_psi0.shape[-1]} members, expected {m}."
-            )
-            assert ensemble_psi0.shape[1] == self.Nphi + self.Na, (
-                f"ensemble_psi0 state size {ensemble_psi0.shape[1]}, "
-                f"expected {self.Nphi + self.Na}."
-            )
+                    alpha0 = mean_vector_to_ensemble(
+                        self.rng, mean_a, std_alpha, m,
+                        method=distribution_alpha,
+                        ensure_mean_at_init=ensure_mean_at_init,
+                    )
+                    psi0 = np.concatenate((psi0, alpha0), axis=0)
 
-        self.update_history(psi=ensemble_psi0, t=self.hist_t[[0]], reset=True)
+                ensemble_psi0 = psi0[np.newaxis, :, :]  # (1, Nphi+Na, m)
 
-        self.filename += f"_ensemble_m{m}"
+            else:
+                if ensemble_psi0.ndim == 2:
+                    ensemble_psi0 = ensemble_psi0[np.newaxis, :, :]
+                assert ensemble_psi0.shape[-1] == m, (
+                    f"ensemble_psi0 has {ensemble_psi0.shape[-1]} members, expected {m}."
+                )
+                assert ensemble_psi0.shape[1] == self.Nphi + self.Na, (
+                    f"ensemble_psi0 state size {ensemble_psi0.shape[1]}, "
+                    f"expected {self.Nphi + self.Na}."
+                )
+
+            self.update_history(psi=ensemble_psi0, t=self.hist_t[[0]], reset=True)
+            self.filename += f"_ensemble_m{m}"
+
+        if self.m != m_old:     # a pool started for the old members does not serve the new ones
+            self.integrator.close()     # not self.close(): a subclass may close more, e.g. the forecaster of a bias
         # print(
         #     f"OK: Initialised {self.filename} history "
         #     f"shape={self.hist.shape}  t={self.hist_t}"
@@ -952,7 +1178,7 @@ class Model:
         (`ensemble_cfg` is False).
         """
         if self.ensemble_cfg is False:
-            warnings.warn('No ensemble configuration (init_ensemble): no state distribution to plot.', stacklevel=2)
+            _warn('No ensemble configuration (init_ensemble): no state distribution to plot.')
             return
         kwargs_state = allowed_kwargs_for_func(plot_state_distribution, kwargs)
         plot_state_distribution(self, **kwargs_state)

@@ -13,12 +13,13 @@ __all__ = [
 ]
 
 import logging
+import math
 from copy import deepcopy
-from functools import partial
+from functools import cache, partial
 from sys import platform
 from typing import Any
 
-from scipy.integrate import solve_ivp
+from scipy.integrate import BDF, DOP853, LSODA, RK23, RK45, OdeSolver, Radau, solve_ivp
 from typeguard import typechecked
 
 if platform == "darwin" or platform == "ios":
@@ -292,10 +293,19 @@ class IVPIntegrator(Integrator):
 
     The model must define ``time_derivative(t, psi, **params)``. A single
     member is solved directly with `ivp_forecast_helper`; an ensemble is
-    either solved member-by-member in parallel (a multiprocessing pool sized
-    to `model.m`, created lazily) or, if ``averaged=True``, solved once for
-    the ensemble mean with each member's deviation from the mean left
-    unchanged (see `advance_ensemble`).
+    either solved member-by-member in parallel, by a pool of
+    ``min(m, cpu_count)`` worker processes, or, if ``averaged=True``, solved
+    once for the ensemble mean with each member's deviation from the mean
+    left unchanged (see `advance_ensemble`). A member, alone or in an
+    ensemble, is solved with its own parameters (`Model.get_alpha`). The
+    first forecast with ``averaged=False`` starts the pool. `close`, a deep
+    copy (`Model.copy`), `Model.create_long_timeseries`, `Model.reset_model`
+    and `Model.init_ensemble` with a new number of members close it, and the
+    next forecast with ``averaged=False`` starts a new pool. A pool serves
+    one number of members: if the number of members changes otherwise, e.g.
+    with `Model.update_history` and ``reset=True``, the next forecast closes
+    the pool and starts a new one. The start and the closing are logged at
+    DEBUG, with the model and the integrator (see `dynamodels.set_verbose`).
 
     Parameters
     ----------
@@ -303,8 +313,35 @@ class IVPIntegrator(Integrator):
         See `Integrator.__init__`.
     method : str
         Integration method forwarded to `scipy.integrate.solve_ivp`
-        (default ``'RK45'``).
+        (default ``'RK45'``), for a single member, for each member of an
+        ensemble and for the mean of an averaged ensemble. A `Model` builds
+        its integrator with the default, so the method of a model is chosen
+        after construction, e.g. ``model.integrator.method = 'DOP853'``.
+        The method is an attribute of each integrator, set by the
+        constructor: setting it on the class
+        (``IVPIntegrator.method = 'DOP853'``) has no effect, unlike
+        `max_steps`.
+
+    Attributes
+    ----------
+    max_steps : int or float
+        Maximum number of solver steps within one output step `model.dt`
+        (default 10000; ``np.inf`` removes the limit). A member that needs
+        more steps, typically a diverged state whose time scale has
+        collapsed, stops instead of stalling `solve_ivp`, and the forecast
+        raises a `RuntimeError` that names the member. With their default
+        `dt`, healthy forecasts of the models in dynamodels take at most 15
+        solver steps per output step (Rijke with BDF or LSODA). The number of
+        steps grows with `dt`, so a very coarse output step needs a larger
+        `max_steps` too: Lorenz63 takes about 12 steps of RK45 per time unit
+        and reaches the default at about ``dt = 800``. Set it on one
+        integrator (``model.integrator.max_steps = 10**5``) or on the class
+        (``IVPIntegrator.max_steps = 10**5``), which changes the default of
+        every integrator that has not set its own. Unlike `method`, it is a
+        class attribute.
     """
+    max_steps = 10_000
+
     def __init__(self, model_instance, method: str = 'RK45'):
         super().__init__(model_instance)
         self.method = method
@@ -315,25 +352,36 @@ class IVPIntegrator(Integrator):
         if not hasattr(self, '_pool'):
             self._pool = None
 
+        if self._pool is not None and getattr(self, '_pool_m', None) != self.model.m:
+            # the pool was started for another number of members (e.g. before update_history with reset=True)
+            self.close()
+
         if self._pool is None and self.model.m > 1:
-            # Initialize multiprocessing pool
-            N_pools = min(self.model.m, mp.cpu_count())
-            logger.debug('Initializing multiprocessing pool for IVPIntegrator with m=%d and %d pools.',
-                         self.model.m, N_pools)
-            self._pool = mp.Pool(N_pools)
+            # One pool of worker processes, shared by the members
+            n_workers = min(self.model.m, mp.cpu_count())
+            logger.debug('%s: starting a pool of %d worker %s for the %d ensemble members (%s).',
+                         _model_name(self.model), n_workers, 'process' if n_workers == 1 else 'processes',
+                         self.model.m, type(self).__name__)
+            self._pool, self._pool_m = mp.Pool(n_workers), self.model.m
         return self._pool
 
 
     def close(self):
-        """Terminate and join the multiprocessing pool, if one was created."""
+        """Terminate and join the multiprocessing pool, if one was started; the next forecast of an ensemble with
+        ``averaged=False`` starts a new pool.
+
+        The closing is logged at DEBUG with the model and the integrator; nothing is logged if there is no pool.
+        """
         if hasattr(self, '_pool') and self._pool is not None:
+            logger.debug('%s: closing the pool of worker processes (%s).', _model_name(self.model), type(self).__name__)
             self._pool.terminate()
             self._pool.join()
             self._pool = None
 
     def __getstate__(self):
         # pickling a model mid-run must not require a manual close(): drop the
-        # live pool (unpicklable); it is lazily re-created on the next forecast
+        # live pool (unpicklable); the next ensemble forecast with averaged=False
+        # starts a new one
         state = self.__dict__.copy()
         state['_pool'] = None
         return state
@@ -350,6 +398,17 @@ class IVPIntegrator(Integrator):
             setattr(result, k, deepcopy(v, memo))
         return result
 
+    def _check_finite(self, psi0):
+        """Raise a ValueError that names the members whose initial state `psi0` (N, m) holds a NaN or an inf.
+
+        `solve_ivp` rejects such a state too, but inside the solve of one member (possibly in a worker of the pool),
+        which does not know the index of the member.
+        """
+        if not np.isfinite(psi0).all():
+            bad = np.flatnonzero(~np.isfinite(psi0).all(axis=0))
+            raise ValueError(f'{_model_name(self.model)}: the initial state of member(s) {bad.tolist()} is not '
+                             'finite (NaN or inf); solve_ivp needs a finite initial state')
+
     def advance_single(self, Nt = 100, averaged=False, alpha = None):
         """Solve the IVP for the single (non-ensemble) member.
 
@@ -361,9 +420,11 @@ class IVPIntegrator(Integrator):
             Accepted for interface compatibility with `advance_ensemble` but
             not used: with one member there is nothing to average.
         alpha : dict, optional
-            Accepted for interface compatibility but not used: the governing
-            equations are called with ``{**model.alpha0, **model.governing_eqns_params}``
-            directly rather than with this argument.
+            Accepted for interface compatibility but not used: as in
+            `advance_ensemble`, the governing equations are called with the
+            parameters of the member, ``model.get_alpha()[0]``, i.e. `alpha0`
+            with the values of the estimated parameters (`est_alpha`) in the
+            state of the member, and with `model.governing_eqns_params`.
 
         Returns
         -------
@@ -371,6 +432,14 @@ class IVPIntegrator(Integrator):
             Forecasted state, excluding the initial condition.
         t : ndarray, shape ``(Nt,)``
             Time stamps spaced by `model.dt`.
+
+        Raises
+        ------
+        ValueError
+            If the initial state is not finite.
+        RuntimeError
+            If the integration stops before the end of the forecast (see
+            `advance_ensemble`).
         """
         # print('Using IVPIntegrator advance_single')
         pm = self.model
@@ -378,15 +447,19 @@ class IVPIntegrator(Integrator):
         t_all = np.round(pm.current_time + np.arange(0, Nt + 1) * pm.dt, pm.precision_t)
 
         psi0 = pm.current_state
+        self._check_finite(psi0)
         args = pm.governing_eqns_params
 
         # --- IVP Logic
-        psi = [ivp_forecast_helper(y0=psi0[:, 0],
-                                    fun=pm.time_derivative,
-                                    t=t_all,
-                                    params={**pm.alpha0, **args})]
+        psi, reason = ivp_forecast_helper(y0=psi0[:, 0],
+                                          fun=pm.time_derivative,
+                                          t=t_all,
+                                          params={**pm.get_alpha()[0], **args},   # with the estimated parameters
+                                          method=self.method,
+                                          max_steps=self.max_steps,
+                                          full_output=True)
 
-        psi = _stack_members(psi, len(t_all))
+        psi = _stack_members([psi], t_all, [reason], _model_name(pm), pm.precision_t)
         return psi[1:], t_all[1:]
 
 
@@ -417,12 +490,27 @@ class IVPIntegrator(Integrator):
             Forecasted ensemble state, excluding the initial condition.
         t : ndarray, shape ``(Nt,)``
             Time stamps spaced by `model.dt`.
+
+        Raises
+        ------
+        ValueError
+            If the initial state of a member is not finite. The message names
+            the members, and no member is integrated.
+        RuntimeError
+            If the integration of a member stops before the end of the
+            forecast. The message names the model, the member, the last
+            output time it reached and the reason: the message of
+            `solve_ivp`, a time derivative that is not finite at the initial
+            state, a step that meets a NaN or an inf, or more than
+            `max_steps` solver steps within one output step. With
+            ``averaged=True``, every member stops with the mean.
         """
         pm = self.model
 
         t_all = np.round(pm.current_time + np.arange(0, Nt + 1) * pm.dt, pm.precision_t)
 
         psi0 = pm.current_state
+        self._check_finite(psi0)       # before the pool starts and before the mean of the averaged forecast
         args = pm.governing_eqns_params
 
         # --- IVP Logic (Similar to previous Model.time_integrate) ---
@@ -430,14 +518,15 @@ class IVPIntegrator(Integrator):
         if not averaged:
             # Ensemble run (using multiprocessing pool)
             alpha_list = pm.get_alpha()
-            forecast_part = partial(ivp_forecast_helper,
-                                    fun=pm.time_derivative, t=t_all, method=self.method)
-
-            sol = [self.__pool.apply_async(forecast_part,
-                                            kwds={'y0': psi0[:, mi].T, 'params': {**args, **alpha_list[mi]}})
+            # keyword arguments only (kwds), as in dynamodels 0.6.0: a serial stand-in for the pool, e.g. in the example
+            # runners of biasda, calls f(**kwds)
+            sol = [self.__pool.apply_async(ivp_forecast_helper,
+                                            kwds=dict(y0=psi0[:, mi].T, fun=pm.time_derivative, t=t_all,
+                                                      params={**args, **alpha_list[mi]}, method=self.method,
+                                                      max_steps=self.max_steps, full_output=True))
                     for mi in range(pm.m)]
 
-            psi = [s.get() for s in sol]
+            psi, reasons = zip(*[s.get() for s in sol])
 
         else:
             # Averaged forecast
@@ -445,33 +534,128 @@ class IVPIntegrator(Integrator):
             psi_deviation = psi0 - psi_mean0
             alpha = pm.get_alpha(psi_mean0)[0]
 
-            psi_mean = ivp_forecast_helper(y0=psi_mean0[:, 0],
-                                            fun=pm.time_derivative,
-                                            t=t_all,
-                                            params={**alpha, **args},
-                                            method=self.method)
+            psi_mean, reason = ivp_forecast_helper(y0=psi_mean0[:, 0],
+                                                   fun=pm.time_derivative,
+                                                   t=t_all,
+                                                   params={**alpha, **args},
+                                                   method=self.method,
+                                                   max_steps=self.max_steps,
+                                                   full_output=True)
 
             psi = [psi_mean + psi_deviation[:, ii] for ii in range(pm.m)]
+            reasons = [reason and f'the ensemble mean (averaged=True) stopped: {reason}'] * pm.m
 
 
         # Rearrange dimensions to be Nt+1 x N x m and remove initial condition
-        psi = _stack_members(psi, len(t_all))
+        psi = _stack_members(psi, t_all, reasons, _model_name(pm), pm.precision_t)
         return psi[1:], t_all[1:]
 
 
 
-def _stack_members(psi, n_t):
-    """The ensemble forecast (n_t, N, m) from the solutions (n_t, N) of the m members. A member whose integration
-    stopped before the last time (`solve_ivp` failed, e.g. a diverging state) has fewer rows, and raises."""
-    short = [i for i, p in enumerate(psi) if len(p) != n_t]
+def _model_name(model):
+    """Name of the (duck-typed) model in error messages: `model.name` if it has one, else its class name."""
+    return getattr(model, 'name', type(model).__name__)
+
+
+def _time_str(t, decimals=12):
+    """The time `t` in an error message, rounded to `decimals` decimals and without trailing zeros, e.g. '0.3' or
+    '123456.78'.
+
+    A fixed number of decimals tells the output times apart at any time; a fixed number of significant digits does
+    not (with .6g, 123456.78 and 123456.83 both print as 123457). A negative `decimals`, the `precision_t` of a model
+    with ``dt >= 1000``, prints the time without decimals.
+    """
+    return np.format_float_positional(t, precision=max(0, decimals), trim='-')
+
+
+def _stack_members(psi, t, reasons=None, name='model', decimals=12):
+    """The ensemble forecast (n_t, N, m) from the solutions (n_t, N) of the m members at the n_t output times `t`.
+
+    A member whose integration stopped before ``t[-1]`` has fewer rows, and raises a RuntimeError that names the model
+    (`name`), the member, the last output time it reached and the reason, ``reasons[i]`` (None if unknown). The times
+    are printed with `decimals` decimals (`IVPIntegrator` passes the `precision_t` of the model).
+    """
+    short = [i for i, p in enumerate(psi) if len(p) != len(t)]
     if short:
-        raise RuntimeError(f'solve_ivp stopped before the end of the forecast for member(s) {short} '
-                           f'({[len(psi[i]) for i in short]} of {n_t} times): the state diverged or the '
-                           'integration failed')
+        reasons = reasons or [None] * len(psi)
+        groups = {}                                     # members that stopped at the same time for the same reason
+        for i in short:
+            groups.setdefault((len(psi[i]), reasons[i]), []).append(i)
+        lines = [f'  member(s) {idx} reached {f"t = {_time_str(t[n - 1], decimals)}" if n else "no output time"} '
+                 f'({n} of {len(t)} output times): {reason or "the state diverged or the integration failed"}'
+                 for (n, reason), idx in groups.items()]
+        raise RuntimeError(f'{name}: solve_ivp stopped before the end of the forecast (t = {_time_str(t[0], decimals)} '
+                           f'to {_time_str(t[-1], decimals)}) for member(s) {short}:\n' + '\n'.join(lines))
     return np.array(psi).transpose((1, 2, 0))
 
 
-def ivp_forecast_helper(y0, fun, t, params, method='RK45'):
+@cache
+def _bounded(solver):
+    """Subclass of the scipy `OdeSolver` class `solver` that fails with a reason, instead of stalling `solve_ivp` or
+    raising an error that does not name the member.
+
+    The subclass fails through the documented failure path of `OdeSolver._step_impl`, so that `solve_ivp` returns
+    status -1, the reason, and the solution up to the last output time reached. It fails on
+
+    - more than `max_steps` steps within one output step `dt_out`. `solve_ivp` has no limit on the number of steps,
+      and a diverged state can collapse the time scale of the system (Lorenz63 at x = 1e200 needs steps of 1e-201);
+    - a time derivative that is not finite at the initial state, which gives the Runge-Kutta methods a NaN first
+      step that they reject forever;
+    - a NaN or an inf in the LU factorization of BDF and Radau, which raises a ValueError;
+    - a step of LSODA to a state that is not finite, which LSODA accepts.
+    """
+    check_state = issubclass(solver, LSODA)     # the other methods reject a step to a state that is not finite
+
+    class Bounded(solver):
+        def __init__(self, fun, t0, y0, t_bound, dt_out=np.inf, max_steps=np.inf, **options):
+            super().__init__(fun, t0, y0, t_bound, **options)
+            self._dt_out, self._max_steps, self._t_mark, self._n = dt_out, max_steps, t0, 0
+            # decimals of the times in the reasons, as Model.dt derives precision_t: enough to place a time between
+            # two output times, at any time
+            self._decimals = min(12, max(0, math.ceil(2 - math.log10(dt_out)))) if 0 < dt_out < np.inf else 12
+            # select_initial_step gives a NaN first step if the time derivative at y0 is NaN, and a zero first step if
+            # it is inf (or so large that its norm overflows, which is not a failure); LSODA has no h_abs, BDF no f
+            h0 = getattr(self, 'h_abs', 1.)
+            self._bad_start = math.isnan(h0) or (h0 == 0 and not np.isfinite(getattr(self, 'f', 0.)).all())
+
+        def _time(self, t):
+            """The time `t` in a reason (formatted only on a failure, not at every step)."""
+            return _time_str(t, self._decimals)
+
+        def _step_impl(self):
+            if self._bad_start:
+                return False, f'the time derivative at the initial state (t = {self._time(self.t)}) is not finite'
+            if abs(self.t - self._t_mark) >= self._dt_out:     # one output step further: a new budget of steps
+                self._t_mark, self._n = self.t, 0
+            self._n += 1
+            if self._n > self._max_steps:
+                h = self.step_size                              # None before the first step
+                return False, (f'more than {self._max_steps} steps of {solver.__name__} within one output step '
+                               f'({self._dt_out:.3g}) at t = {self._time(self.t)}'
+                               + (f', step size {h:.3g}' if h else '')
+                               + ': the state may have diverged, or the system is too stiff for this method '
+                               '(see IVPIntegrator.max_steps)')
+            t = self.t
+            try:
+                success, message = super()._step_impl()
+            except ValueError as e:         # lu_factor (BDF, Radau) rejects a matrix with a NaN or an inf
+                if 'infs or NaNs' not in str(e):
+                    raise
+                return False, (f'the step of {solver.__name__} from t = {self._time(t)} met a NaN or an inf ({e}): '
+                               'the state may have diverged')
+            if success and check_state and not np.isfinite(self.y).all():
+                return False, (f'the step of {solver.__name__} from t = {self._time(t)} gave a state that is not '
+                               'finite (NaN or inf): the state may have diverged')
+            return success, message
+
+    Bounded.__name__ = Bounded.__qualname__ = f'Bounded{solver.__name__}'
+    return Bounded
+
+
+_SOLVERS = {s.__name__: s for s in (RK23, RK45, DOP853, Radau, BDF, LSODA)}    # the methods of solve_ivp
+
+
+def ivp_forecast_helper(y0, fun, t, params, method='RK45', max_steps=None, full_output=False):
     """Solve a single IVP with `scipy.integrate.solve_ivp`.
 
     Defined at module level (rather than as a method) so it can be pickled
@@ -490,15 +674,36 @@ def ivp_forecast_helper(y0, fun, t, params, method='RK45'):
         Extra keyword arguments bound to `fun` via `functools.partial`.
     method : str
         Integration method forwarded to `solve_ivp` (default ``'RK45'``).
+    max_steps : int or float, optional
+        Maximum number of solver steps within one output step
+        ``(t[-1] - t[0]) / (len(t) - 1)``, beyond which the integration
+        stops. The default, None, sets no limit; `IVPIntegrator` passes its
+        `max_steps`.
+    full_output : bool
+        If True, also return the reason why the integration stopped early.
 
     Returns
     -------
-    ndarray, shape ``(len(t), len(y0))``
-        Solution evaluated at `t`.
+    y : ndarray, shape ``(n, len(y0))``
+        Solution evaluated at the first ``n`` times of `t`. If the
+        integration stops early, ``n < len(t)``: the time derivative at `y0`
+        is not finite, a step meets a NaN or an inf, `solve_ivp` fails, or
+        the solver takes more than `max_steps` steps within one output step.
+    reason : str or None
+        Only if `full_output`: why the integration stopped early, or None if
+        it reached ``t[-1]``.
     """
     assert len(t) > 1
     part_fun = partial(fun, **params)
 
-    out = solve_ivp(part_fun, t_span=(t[0], t[-1]), y0=y0, t_eval=t, method=method)
-    return out.y.T
+    solver = _SOLVERS.get(method, method) if isinstance(method, str) else method
+    options = {}
+    if isinstance(solver, type) and issubclass(solver, OdeSolver):
+        solver = _bounded(solver)
+        options = {'dt_out': abs(t[-1] - t[0]) / (len(t) - 1), 'max_steps': np.inf if max_steps is None else max_steps}
+    # otherwise, an unknown method, for which solve_ivp raises its usual ValueError
+    out = solve_ivp(part_fun, t_span=(t[0], t[-1]), y0=y0, t_eval=t, method=solver, **options)
+    y = out.y.T if len(out.t) else np.empty((0, len(y0)))   # out.y is an empty list if the first step failed
+    reason = None if out.status == 0 else out.message
+    return (y, reason) if full_output else y
 # %%

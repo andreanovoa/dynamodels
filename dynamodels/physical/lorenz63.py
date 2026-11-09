@@ -62,10 +62,14 @@ class Lorenz63(Model):
 
         super().__init__(psi0=psi0, dt=dt, integrator_class=IVPIntegrator, **model_dict)
 
-        # measured 1/lambda1 at this rho (set once: params change by re-instantiation)
+        # measured 1/lambda1 at this rho (reset_model derives it again for a new rho)
         self.t_lyap = self.t_lyap_from_table(self.rho, _LAM1_MEASURED, Lorenz63.t_lyap)
 
         self.alpha_labels = dict(rho='$\\rho$', sigma='$\\sigma$', beta='$\\beta$')
+
+    def reset_derived(self, dt, **overrides):
+        """See `Model.reset_derived`. Lorenz63 derives the Lyapunov time `t_lyap` again from `rho`."""
+        self.t_lyap = self.t_lyap_from_table(self.rho, _LAM1_MEASURED, Lorenz63.t_lyap)
 
 
     # _______________ Lorenz63 specific properties and methods ________________ #

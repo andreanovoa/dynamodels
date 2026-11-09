@@ -72,12 +72,17 @@ class Lorenz96(Model):
 
         super().__init__(psi0=psi0, dt=dt, integrator_class=IVPIntegrator, **model_dict)
 
-        # measured 1/lambda1 at this F (Nx=10 table only; set once — params change
-        # by re-instantiation)
+        # measured 1/lambda1 at this F (Nx=10 table only; reset_model derives it
+        # again for a new F)
         if self.Nx == 10:
             self.t_lyap = self.t_lyap_from_table(self.F, _LAM1_MEASURED_NX10, Lorenz96.t_lyap)
 
         self.alpha_labels = dict(F='$F$')
+
+    def reset_derived(self, dt, **overrides):
+        """See `Model.reset_derived`. Lorenz96 with Nx = 10 derives the Lyapunov time `t_lyap` again from `F`."""
+        if self.Nx == 10:
+            self.t_lyap = self.t_lyap_from_table(self.F, _LAM1_MEASURED_NX10, Lorenz96.t_lyap)
 
 
     # _______________ Lorenz63 specific properties and methods ________________ #

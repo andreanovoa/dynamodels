@@ -3,6 +3,7 @@ import numpy as np
 
 from ..integrator import DiscreteIntegrator
 from ..model import Model
+from ..utils import _is_method
 
 # Known regimes on the default l = pi domain (see the qlROM-DA study).
 # Values not listed fall back to the class defaults (32x32 grid, dt = 0.01).
@@ -101,7 +102,7 @@ class KS2D(Model):
                 model_dict.setdefault(key, val)  # explicit kwargs win over the case
 
         for key in list(model_dict.keys()):
-            if key in vars(KS2D):
+            if key in vars(KS2D) and not _is_method(KS2D, key):   # Model.__init__ ignores a method name, with a warning
                 setattr(self, key, model_dict.pop(key))
 
         if self.Nx % 2 != 0 or self.Ny % 2 != 0:
@@ -152,6 +153,15 @@ class KS2D(Model):
         self.alpha_lims = dict(nu1=(0.01, 1.0), nu2=(0.01, 1.0))
 
     # _______________ Modified Model methods ________________ #
+
+    def reset_derived(self, dt, **overrides):
+        """See `Model.reset_derived`. KS2D rebuilds the anisotropy, the spectral operator and the ETDRK4 coefficients
+        for the new `nu1` and `nu2`, which must be positive, as in the constructor."""
+        if self.nu1 <= 0 or self.nu2 <= 0:
+            raise ValueError("nu1 and nu2 must be positive.")
+        self.aniso = self.nu2 / self.nu1
+        self.Lhat = self._lhat(self.nu1, self.nu2)
+        self._etdrk4_cache = self._member_terms = None
 
     @property
     def obs_labels(self):

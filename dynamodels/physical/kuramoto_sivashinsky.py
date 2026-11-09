@@ -10,6 +10,7 @@ from matplotlib.colors import Normalize
 
 from ..integrator import DiscreteIntegrator
 from ..model import Model
+from ..utils import _is_method
 
 
 class KS(Model):
@@ -99,7 +100,7 @@ class KS(Model):
         nu_given = model_dict.get('nu') is not None
 
         for key in list(model_dict.keys()):
-            if key in vars(KS):
+            if key in vars(KS) and not _is_method(KS, key):   # Model.__init__ ignores, with a warning, a method name
                 setattr(self, key, model_dict.pop(key))
 
 
@@ -167,6 +168,13 @@ class KS(Model):
 
     # _______________ Modified Model methods ________________ #
 
+    def reset_derived(self, dt, **overrides):
+        """See `Model.reset_derived`. As the constructor does, KS keeps the exact time step, which the `dt` setter
+        of `Model` rounds, and rebuilds the ETDRK4 coefficients for it. KS has no `params`, so `dt` is the only
+        keyword of `reset_model`."""
+        self._dt = float(dt)
+        self.ETDRK4_f_terms = None
+
 
     @property
     def obs_labels(self):
@@ -224,7 +232,7 @@ class KS(Model):
             raise AssertionError(f'u_hat should be shape (Nk, m)=({self.Nk, self.m}) or (Nt, Nk, m). Got {u_hat.shape} instead.')
 
 
-    def __nonlinear_operator(self, u_hat):
+    def _nonlinear_operator(self, u_hat):
         """
             Compute the nonlinear term N(u) = -u * u_x in Fourier space.
             F[-u * u_x] = F[1/2(u * u)_x]
@@ -322,7 +330,9 @@ class KS(Model):
             f1=_coef(hf1),
             f2=_coef(hf2),
             f3=_coef(hf3),
-            nonlinear_operator=self.__nonlinear_operator,
+            # Single underscore on purpose: pickle rebuilds this cached bound method as
+            # getattr(self, '_nonlinear_operator'), which a name-mangled (double underscore) method fails.
+            nonlinear_operator=self._nonlinear_operator,
         )
 
 
@@ -581,6 +591,10 @@ class KS(Model):
 
         axs[-1].set_xlabel("t")
 
+
+# dynamodels 0.6.0 cached the bound method under its unmangled name, '__nonlinear_operator', which pickle looks up
+# with getattr when it loads a KS pickled after a forecast: the alias makes those pickles loadable
+setattr(KS, '__nonlinear_operator', KS._nonlinear_operator)
 
 
 # %%
