@@ -66,6 +66,10 @@ class Lorenz63(Model):
         self.t_lyap = self.t_lyap_from_table(self.rho, _LAM1_MEASURED, Lorenz63.t_lyap)
 
         self.alpha_labels = dict(rho='$\\rho$', sigma='$\\sigma$', beta='$\\beta$')
+        # The three parameters are positive (Prandtl number, Rayleigh number ratio, aspect-ratio factor). An
+        # estimator rejects an analysis that takes one below zero; with sigma or beta below zero the trajectories
+        # grow without bound.
+        self.alpha_lims = dict(rho=(0., None), sigma=(0., None), beta=(0., None))
 
     def reset_derived(self, dt, **overrides):
         """See `Model.reset_derived`. Lorenz63 derives the Lyapunov time `t_lyap` again from `rho`."""

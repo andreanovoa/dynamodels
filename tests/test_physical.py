@@ -269,6 +269,15 @@ def test_t_lyap_tables():
         m.close()
 
 
+def test_lorenz63_parameters_are_bounded_below_by_zero():
+    # without bounds an estimator never rejected a negative rho or beta, and the forecast blew up (romda,
+    # Lorenz-63 example with inflation 1.05, seed 0: rho -119, beta 0.06, |y| up to 2e4)
+    m = Lorenz63()
+    assert m.alpha_lims == dict(rho=(0., None), sigma=(0., None), beta=(0., None))
+    assert Lorenz63(rho=10.).alpha_lims == m.alpha_lims
+    m.close()
+
+
 def test_pickle_drops_live_pool():
     # pickling a mid-run model must not require close(): __getstate__ drops the
     # (unpicklable) live pool and the copy lazily re-creates one when needed
