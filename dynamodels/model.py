@@ -1272,7 +1272,6 @@ class Model:
         nrows = min(self.Nphi, max_modes)
 
         fig = plt.figure(figsize=(8, nrows+1), layout="constrained")
-        plt.suptitle('State time evolution')
         axs = fig.subplots(nrows, 2, sharey='row', sharex='col')
         if nrows == 1:
             axs = [axs]
@@ -1328,7 +1327,6 @@ class Model:
             t_zoom = int(self.t_CR / self.dt)
 
         fig = plt.figure(figsize=(8, self.Nq+1), layout="constrained")
-        plt.suptitle('Observables time evolution')
         axs = fig.subplots(self.Nq, 2, sharey='row', sharex='col')
         if self.Nq == 1:
             axs = [axs]
@@ -1375,7 +1373,6 @@ class Model:
             for mi, ax in enumerate(axs):
                 im = ax.imshow(y_hist[:, :, mi].T, aspect='auto', origin='lower',
                                cmap='RdBu_r', vmin=-lim, vmax=lim, extent=extent)
-            axs[0].set(title=f'{self.name} state space-time evolution')
             fig.colorbar(im, ax=axs, shrink=1 / nrows)
         else:
             fig, axs = plt.subplots(nrows=2, figsize=(8, 6), sharex=True, layout='constrained')
