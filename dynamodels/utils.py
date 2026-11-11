@@ -67,13 +67,18 @@ def allowed_kwargs_for_func(func, kwargs):
 
 
 
+def _num(x) -> str:
+    """`x` with three significant digits for an axis label: 1.1042402826855124 -> 1.1, 2.6666666666666665 -> 2.67."""
+    return f'{float(x):.3g}'
+
+
 def normalized_time(
     reference_t: float, *times
 ) -> tuple[Sequence[np.ndarray | None], str]:
     """Rescale each array in `times` by `reference_t` and build a matching axis label."""
     if reference_t == 1.0:
         return times, '$t$'
-    return [t / reference_t if t is not None else t for t in times], f'$t/{reference_t}$'
+    return [t / reference_t if t is not None else t for t in times], f'$t/{_num(reference_t)}$'
 
 
 def normalized_y(
@@ -93,7 +98,7 @@ def normalized_y(
     reference_y = np.asarray(reference_y)
     ref = reference_y[np.newaxis, :, np.newaxis]
     ys_norm = [y.copy() / ref if y is not None else y for y in ys]
-    lbls = [f'{y_labels[qi]} / ${reference_y[qi]}$' for qi in range(Ny)]
+    lbls = [f'{y_labels[qi]} / ${_num(reference_y[qi])}$' for qi in range(Ny)]
     return ys_norm, lbls
 
 
@@ -109,7 +114,7 @@ def normalized_alpha(alpha, alpha_keys, alpha_labels, reference_a=None):
             ref = reference_a.get(key, 1.0)
             reference_alpha[key] = ref
             if ref != 1.0:
-                alpha_lbls[key] += f' / {ref}'
+                alpha_lbls[key] += f' / {_num(ref)}'
             alpha[:, ai] /= ref
     return alpha, alpha_lbls
 
