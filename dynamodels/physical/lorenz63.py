@@ -110,6 +110,27 @@ class Lorenz63(Model):
 
         return (dx1, dx2, dx3) + (0,) * (len(psi) - 3)
 
+    @staticmethod
+    def rk4_step(x, dt, sigma=10.0, rho=28.0, beta=8.0 / 3.0, h=None):
+        """
+        Classical fourth-order Runge-Kutta over a time `dt`, with fixed steps, as `Lorenz96.rk4_step`.
+
+        `x` is a state (3,) or an ensemble (3, m), and each parameter a scalar or an (m,) array, one value per column.
+        With ``h=None`` the scheme takes one step of `dt`; otherwise it takes round(dt / h) steps of `h`.
+        """
+        x = np.asarray(x, dtype=float)
+        n, h = (1, dt) if h is None else (int(round(dt / h)), h)
+
+        def f(v):
+            return np.stack(Lorenz63.time_derivative(0., v, sigma, rho, beta))
+        for _ in range(n):
+            k1 = f(x)
+            k2 = f(x + h / 2 * k1)
+            k3 = f(x + h / 2 * k2)
+            k4 = f(x + h * k3)
+            x = x + h / 6 * (k1 + 2 * k2 + 2 * k3 + k4)
+        return x
+
 
     def visualize_attractor(self, psi_cases=None, **kwargs):
         """

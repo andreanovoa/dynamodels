@@ -518,3 +518,24 @@ def test_lorenz96_rk4_step_matches_the_scheme(h):
     out = Lorenz96.rk4_step(x0, dt, F=F, h=h)
     np.testing.assert_allclose(out, x, rtol=0., atol=1e-13)
     np.testing.assert_allclose(Lorenz96.rk4_step(x0[:, 0], dt, F=F[0], h=h), out[:, 0], rtol=0., atol=1e-13)
+
+
+@pytest.mark.parametrize('h', [None, 0.002])
+def test_lorenz63_rk4_step_matches_the_scheme(h):
+    """`rk4_step` is the classical RK4 of Lorenz-63, written out by hand, bit for bit, with rho per column."""
+    rng = np.random.default_rng(2)
+    x0 = np.array([1., 1., 20.])[:, None] + rng.standard_normal((3, 4))
+    rho, dt = np.array([20., 28., 32., 40.]), 0.01
+
+    def rhs(v):
+        return np.stack([10. * (v[1] - v[0]), v[0] * (rho - v[2]) - v[1], v[0] * v[1] - 8. / 3. * v[2]])
+
+    x, step = x0, dt if h is None else h
+    for _ in range(1 if h is None else int(round(dt / h))):
+        k1 = rhs(x)
+        k2 = rhs(x + 0.5 * step * k1)
+        k3 = rhs(x + 0.5 * step * k2)
+        x = x + step / 6 * (k1 + 2 * k2 + 2 * k3 + rhs(x + step * k3))
+    out = Lorenz63.rk4_step(x0, dt, rho=rho, h=h)
+    np.testing.assert_array_equal(out, x)
+    np.testing.assert_array_equal(Lorenz63.rk4_step(x0[:, 0], dt, rho=rho[0], h=h), out[:, 0])
