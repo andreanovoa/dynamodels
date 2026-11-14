@@ -106,19 +106,39 @@ class Lorenz96(Model):
     @staticmethod
     def time_derivative(t, psi, Nx, F):
         """
-        Calculates the time derivative of the Lorenz 96 system (see class docstring).
-        """
+        Time derivative of the Lorenz 96 system (see class docstring) along axis 0.
 
+        `psi` is a state (N,) or an ensemble (N, m), with N >= Nx; the rows past Nx (parameters of an augmented
+        state) have a zero derivative. `F` is a scalar or an (m,) array, one forcing per column.
+        """
+        psi = np.asarray(psi, dtype=float)
         x = psi[:Nx]
 
-        dx = (np.roll(x, -1) - np.roll(x, 2)) * np.roll(x, 1) - x + F
+        dx = (np.roll(x, -1, axis=0) - np.roll(x, 2, axis=0)) * np.roll(x, 1, axis=0) - x + F
 
         if len(psi) > Nx:
-             dx = np.concatenate((dx, np.zeros(len(psi) - Nx)))
+            dx = np.concatenate((dx, np.zeros((len(psi) - Nx,) + dx.shape[1:])))
 
         return dx
 
+    @staticmethod
+    def rk4_step(x, dt, F=8.0, h=None):
+        """
+        Classical fourth-order Runge-Kutta over a time `dt`, with fixed steps.
 
+        `x` is a state (Nx,) or an ensemble (Nx, m), and `F` a scalar or an (m,) array, one forcing per column.
+        With ``h=None`` the scheme takes one step of `dt`; otherwise it takes round(dt / h) steps of `h`.
+        """
+        x = np.asarray(x, dtype=float)
+        n, h = (1, dt) if h is None else (int(round(dt / h)), h)
+        Nx = x.shape[0]
+        for _ in range(n):
+            k1 = Lorenz96.time_derivative(0., x, Nx, F)
+            k2 = Lorenz96.time_derivative(0., x + h / 2 * k1, Nx, F)
+            k3 = Lorenz96.time_derivative(0., x + h / 2 * k2, Nx, F)
+            k4 = Lorenz96.time_derivative(0., x + h * k3, Nx, F)
+            x = x + h / 6 * (k1 + 2 * k2 + 2 * k3 + k4)
+        return x
 
 
     def visualize_spatiotemporal_hist(self, y_hist=None, t=None, nrows=None, averaged=False,

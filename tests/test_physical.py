@@ -481,3 +481,40 @@ def test_lorenz96_nx10_lyapunov_table_between_onset_and_f8():
     assert abs(Lorenz96(Nx=10, F=5.5).t_lyap - 1 / 0.4832) < 0.03 / 0.4832
     assert Lorenz96(Nx=10, F=8.0).t_lyap == 1 / 1.184          # keys the cached datasets
     assert Lorenz96(Nx=10, F=4.0).t_lyap == Lorenz96.t_lyap    # below the chaotic range: fallback
+
+
+def test_lorenz96_time_derivative_column_wise():
+    """An ensemble (N, m) gives each column its own derivative, with one forcing per column, and the parameter
+    rows past Nx a zero derivative, as a state (N,) does."""
+    rng = np.random.default_rng(0)
+    Nx, m = 10, 4
+    psi = rng.standard_normal((Nx + 1, m))
+    F = np.array([2., 5., 8., 10.])
+    dx = Lorenz96.time_derivative(0., psi, Nx, F)
+    assert dx.shape == psi.shape
+    for j in range(m):
+        np.testing.assert_array_equal(dx[:, j], Lorenz96.time_derivative(0., psi[:, j], Nx, F[j]))
+    np.testing.assert_array_equal(dx[Nx:], 0.)
+    np.testing.assert_array_equal(Lorenz96.time_derivative(0., psi[:Nx], Nx, 8.)[:, 1],
+                                  Lorenz96.time_derivative(0., psi[:Nx, 1], Nx, 8.))
+
+
+@pytest.mark.parametrize('h', [None, 0.01])
+def test_lorenz96_rk4_step_matches_the_scheme(h):
+    """`rk4_step` is the classical RK4 on the periodic ring, written out by hand, to round-off."""
+    rng = np.random.default_rng(1)
+    x0 = 8. + rng.standard_normal((10, 3))
+    F, dt = np.array([4., 6., 8.]), 0.05
+
+    def rhs(v):
+        return (np.roll(v, -1, 0) - np.roll(v, 2, 0)) * np.roll(v, 1, 0) - v + F
+
+    x, step = x0, dt if h is None else h
+    for _ in range(1 if h is None else int(round(dt / h))):
+        k1 = rhs(x)
+        k2 = rhs(x + 0.5 * step * k1)
+        k3 = rhs(x + 0.5 * step * k2)
+        x = x + step / 6. * (k1 + 2 * k2 + 2 * k3 + rhs(x + step * k3))
+    out = Lorenz96.rk4_step(x0, dt, F=F, h=h)
+    np.testing.assert_allclose(out, x, rtol=0., atol=1e-13)
+    np.testing.assert_allclose(Lorenz96.rk4_step(x0[:, 0], dt, F=F[0], h=h), out[:, 0], rtol=0., atol=1e-13)
