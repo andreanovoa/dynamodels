@@ -6,7 +6,7 @@
 
 Dynamical-system models with pre-allocated history tracking and pluggable time
 integrators — the modelling core split out of
-[romda](https://github.com/andreanovoa/real-time-bias-aware-DA) so it can be
+[romda](https://github.com/andreanovoa/romda) so it can be
 reused on its own. Torch-free; depends only on numpy, scipy, matplotlib,
 typeguard and multiprocess.
 
@@ -43,7 +43,7 @@ modules carry measured dominant-Lyapunov tables (module-level `_LAM1_MEASURED`;
 
 - [`ntsa`](https://github.com/andreanovoa/ntsa) — nonlinear time-series analysis
   for any dynamodels-style model ([docs](https://andreanovoa.github.io/ntsa/)).
-- [romda](https://github.com/andreanovoa/real-time-bias-aware-DA) — bias-aware
+- [romda](https://github.com/andreanovoa/romda) — bias-aware
   ensemble data assimilation built on top.
 
 ## Development

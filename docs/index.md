@@ -37,7 +37,7 @@ The package itself depends only on numpy, scipy, matplotlib and typeguard.
 - [`ntsa`](https://andreanovoa.github.io/ntsa/) — nonlinear time-series analysis
   (Lyapunov exponents, delay embeddings, regime classification, bifurcation sweeps)
   for any model that follows the `dynamodels` protocol.
-- [romda](https://andreanovoa.github.io/real-time-bias-aware-DA/) — bias-aware
+- [romda](https://andreanovoa.github.io/romda/) — bias-aware
   ensemble data assimilation built on top of both.
 
 ## Citing
