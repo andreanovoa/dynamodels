@@ -1431,8 +1431,7 @@ def plot_state_distribution(
     (hist_t,), t_lbl          = normalized_time(reference_t, model.hist_t)
 
     def add_stats_text(ax, yy):
-        mean = np.mean(yy)
-        std  = np.std(yy) / mean if mean != 0 else 0
+        mean, std = np.mean(yy), np.std(yy)      # the standard deviation itself, never negative
         ax.text(0.95, 0.95, f'Mean: {mean:.4f}\nStd: {std:.4f}',
                 transform=ax.transAxes, fontsize='x-small',
                 va='top', ha='right', bbox=dict(boxstyle='round', facecolor='white', alpha=0.5))

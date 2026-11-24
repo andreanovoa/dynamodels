@@ -24,3 +24,22 @@ def test_parameter_label_rounds_the_reference():
                                    reference_a={'beta': 2.6666666666666665})
     assert labels == {'beta': r'$\beta$ / 2.67', 'tau': 'tau'}
     np.testing.assert_allclose(out[:, 0], 1 / 2.6666666666666665)
+
+
+def test_state_histograms_print_a_positive_std():
+    """The text box of each histogram gives the standard deviation, which is positive for a negative mean."""
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+    import numpy as np
+
+    from dynamodels.model import plot_state_distribution
+    from dynamodels.physical import VdP
+
+    model = VdP()
+    model.init_ensemble(m=8, std_phi=0.5)
+    model.update_history(-np.abs(model.current_state)[np.newaxis] - 1., t=np.array([model.t]), reset=True)
+    plot_state_distribution(model)
+    texts = [t.get_text() for ax in plt.gcf().axes for t in ax.texts if 'Std' in t.get_text()]
+    assert texts and all(float(t.split('Std:')[1]) >= 0 for t in texts)
+    plt.close('all')
