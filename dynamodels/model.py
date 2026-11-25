@@ -1399,6 +1399,42 @@ class Model:
 
 
 
+#: Colours of the ensemble distributions: the state, and one colour per estimated parameter (those of the ensemble
+#: time series of romda).
+_STATE_COLOUR = '#20B2AA'
+_PARAM_COLOURS = ('#2CA02C', '#F4A460', '#8C8CCB', '#1F77B4', '#D62728', '#C9A400', '#00BFFF')
+
+
+def _mean_std_text(mean, std):
+    """'mean ± std' with two significant digits in the standard deviation and the mean to the same decimal:
+    2574.19, 31.2 -> '2574 ± 31'; 69.8731, 0.0213 -> '69.873 ± 0.021'."""
+    if not np.isfinite(std) or std <= 0:
+        return f'{mean:.4g} ± 0'
+    decimals = max(0, 1 - int(np.floor(np.log10(std))))
+    if decimals > 5 or abs(mean) >= 1e6:                  # very small or very large: scientific notation
+        return f'{mean:.2e} ± {std:.1e}'
+    return f'{mean:.{decimals}f} ± {std:.{decimals}f}'
+
+
+def _distribution_panel(ax, values, label, colour, nbins=None):
+    """Histogram of the members `values` on `ax`: light bars, one tick per member under them, a line at the mean,
+    and the mean and standard deviation above the panel."""
+    values = np.asarray(values, dtype=float)
+    mean, std = float(np.mean(values)), float(np.std(values))
+    bins = nbins or int(np.clip(np.ceil(np.sqrt(values.size)) + 2, 6, 20))
+    counts, _, _ = ax.hist(values, bins=bins, color=colour, alpha=0.45, edgecolor='white', linewidth=0.8)
+    top = max(float(counts.max()), 1.)
+    ax.plot(values, np.full(values.size, -0.06 * top), '|', color=colour, ms=6, mew=0.8, clip_on=False)
+    ax.axvline(mean, color='0.2', lw=1)
+    ax.set_title(_mean_std_text(mean, std), fontsize='small', loc='left', color='0.2')
+    ax.set(xlabel=label, ylim=(-0.12 * top, 1.08 * top), yticks=[])
+    ax.locator_params(axis='x', nbins=4)
+    ax.ticklabel_format(axis='x', useOffset=False, scilimits=(-4, 5))
+    ax.tick_params(axis='x', labelsize='small')
+    for side in ('top', 'right', 'left'):
+        ax.spines[side].set_visible(False)
+
+
 def plot_state_distribution(
     model: Model,
     time_indices=None,
@@ -1406,78 +1442,47 @@ def plot_state_distribution(
     reference_alpha=None,
     reference_y=1.0,
     reference_t: float = 1.0,
-    nbins: int = 6,
+    nbins: int | None = None,
 ) -> None:
-    """Histograms of state variables and parameters at given time indices."""
+    """Distributions of the ensemble at the given time indices: one histogram per state variable (at most
+    `max_modes`, default 8) and one per estimated parameter. Each panel shows the members as ticks under the bars,
+    the ensemble mean as a line, and "mean ± standard deviation" above it. `nbins` defaults to a number that grows
+    with the square root of the ensemble size."""
     time_indices = time_indices if time_indices is not None else [-1]
-    max_modes    = max_modes if max_modes is not None else model.Nphi
-
-    ncols_phi = min(max_modes, 4)
-    nrows_phi = int(np.ceil(max_modes / ncols_phi))
 
     has_alpha = model.Na > 0
-    alpha_hist = alpha_labels = est_alpha = None
+    alpha_hist = alpha_labels = None
     if has_alpha:
-        ncols_alpha = min(model.Na, 4)
-        nrows_alpha = int(np.ceil(model.Na / ncols_alpha))
-        est_alpha   = model.est_alpha
         alpha_hist, alpha_labels = normalized_alpha(
-            model.hist[:, -model.Na:, :], est_alpha, model.alpha_labels, reference_a=reference_alpha
+            model.hist[:, -model.Na:, :], model.est_alpha, model.alpha_labels, reference_a=reference_alpha
         )
-    else:
-        ncols_alpha = nrows_alpha = 0
 
     (phi_hist,), state_labels = normalized_y(reference_y, model.state_labels, model.hist[:, :model.Nphi, :])
     (hist_t,), t_lbl          = normalized_time(reference_t, model.hist_t)
 
-    def add_stats_text(ax, yy):
-        mean = np.mean(yy)
-        std  = np.std(yy) / mean if mean != 0 else 0
-        ax.text(0.95, 0.95, f'Mean: {mean:.4f}\nStd: {std:.4f}',
-                transform=ax.transAxes, fontsize='x-small',
-                va='top', ha='right', bbox=dict(boxstyle='round', facecolor='white', alpha=0.5))
-
-    def flat_axs(sf_panel, ncols, nrows):
-        axs = sf_panel.subplots(ncols=ncols, nrows=nrows, sharey=True)
-        return axs.ravel() if ncols * nrows > 1 else [axs]
-
     for ti in time_indices:
-        phi  = phi_hist[ti, :model.Nphi, :]
-        lbls = list(state_labels)
-
+        phi, lbls = phi_hist[ti, :model.Nphi, :], list(state_labels)
         if np.iscomplexobj(phi):
-            phi_c = phi.copy()
-            phi   = np.zeros((2 * model.Nphi, phi_c.shape[1]))
-            phi[0::2] = phi_c.real
-            phi[1::2] = phi_c.imag
-            if ti == time_indices[0]:
-                lbls      = [f'{lb} ({p})' for lb in state_labels for p in ('real', 'imag')]
-                nrows_phi = int(np.ceil((2 * max_modes) / ncols_phi))
+            phi  = np.stack([phi.real, phi.imag], axis=1).reshape(2 * model.Nphi, -1)
+            lbls = [f'{lb} ({p})' for lb in state_labels for p in ('real', 'imag')]
+        n_phi = min(len(phi), max_modes if max_modes is not None else 8)
 
-        fig = plt.figure(
-            figsize=(2 * max(ncols_phi, ncols_alpha or 0), 2 * (nrows_phi + nrows_alpha)),
-            layout='constrained',
-        )
-        plt.suptitle(f'Ensemble distributions at {t_lbl}={hist_t[ti]:.3f}')
-
-        sf = (fig.subfigures(nrows=2, ncols=1, height_ratios=[nrows_phi, nrows_alpha],
-                             wspace=0.07, hspace=0.15)
-              if has_alpha else [fig.subfigures(nrows=1, ncols=1)])
-
-        axs = flat_axs(sf[0], ncols_phi, nrows_phi)
-        for ax, ph, lbl in zip(axs, phi, lbls):
-            ax.hist(ph, bins=nbins, color='tab:green')
-            ax.set(xlabel=lbl)
-            add_stats_text(ax, ph)
-        for ax in axs[model.Nphi:]:
-            ax.axis('off')
-
+        panels = [(phi[k], lbls[k], _STATE_COLOUR) for k in range(n_phi)]
         if has_alpha:
-            assert alpha_hist is not None and alpha_labels is not None and est_alpha is not None
-            axs2 = flat_axs(sf[1], ncols_alpha, nrows_alpha)
-            for ax, a, param in zip(axs2, alpha_hist[ti], est_alpha):
-                ax.hist(a, bins=nbins)
-                ax.set(xlabel=alpha_labels[param])
-                add_stats_text(ax, a)
-            for ax in axs2[model.Na:]:
+            panels += [(a, alpha_labels[key], _PARAM_COLOURS[k % len(_PARAM_COLOURS)])
+                       for k, (a, key) in enumerate(zip(alpha_hist[ti], model.est_alpha))]
+
+        # the parameters start a new row, under the state
+        ncols = min(4, max(n_phi, model.Na))
+        rows_phi, rows_alpha = int(np.ceil(n_phi / ncols)), int(np.ceil(model.Na / ncols))
+        fig, axs = plt.subplots(rows_phi + rows_alpha, ncols, figsize=(2.3 * ncols, 1.9 * (rows_phi + rows_alpha) + 0.4),
+                                layout='constrained', squeeze=False)
+        slots = list(axs[:rows_phi].ravel()[:n_phi]) + list(axs[rows_phi:].ravel()[:model.Na])
+        for ax in axs.ravel():
+            if not any(ax is slot for slot in slots):
                 ax.axis('off')
+        for ax, (values, label, colour) in zip(slots, panels):
+            _distribution_panel(ax, values, label, colour, nbins=nbins)
+
+        shown = '' if n_phi == len(phi) else f' (first {n_phi} of {len(phi)} state variables)'
+        fig.suptitle(f'Ensemble of {phi.shape[-1]} members at {t_lbl} = {hist_t[ti]:.3f}{shown}', fontsize='medium')
